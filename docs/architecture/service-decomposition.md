@@ -43,7 +43,14 @@ flowchart TB
     ai -.->|on demand| reporting["11 Reporting & Analytics"]
     reporting -.->|consumes all events| ingestion
     identity["1 Identity & Access"] -.->|principals, audit| ingestion
+
+    classDef pipeline fill:#2b6cb0,stroke:#234f80,color:#ffffff
+    classDef supporting fill:#616a75,stroke:#49505a,color:#ffffff
+    class ingestion,normalization,enrichment,risk,triage,remediation pipeline
+    class identity,inventory,ai,notifications,reporting supporting
 ```
+
+Color key: blue = the finding pipeline (events flow top to bottom), gray = supporting contexts consumed on demand.
 
 ## Event catalog
 

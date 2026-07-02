@@ -37,7 +37,7 @@ PostgreSQL holds the normalized domain model with real constraints and transacti
 
 ### Worker framework note
 
-Milestone 1 will choose between `nats-py` used directly and FastStream (NATS backend) for the worker's consumer layer. FastStream is favored going in: Pydantic-native message validation and testable handlers, matching the FastAPI developer experience. This is deliberately deferred until the first consumer is written.
+Decided in Milestone 1 (ADR-0013): the worker uses `nats-py` directly behind the `EventBus` wrapper in `shared/events.py`, with explicit ack/nak retry policy in `platform/worker.py`. FastStream is reevaluated if consumer count or middleware needs grow (M3+).
 
 ## Version baseline (M0)
 

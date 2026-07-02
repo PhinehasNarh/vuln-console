@@ -17,7 +17,7 @@ Security teams drown in duplicated, unprioritized scanner output. This console e
 
 ## Status
 
-**Milestone 0: Architecture and scaffold.** No application code yet. This repository currently contains the full architecture package and infrastructure scaffold. See [docs/roadmap.md](docs/roadmap.md) for what lands next.
+**Milestone 1: walking skeleton, code complete.** Upload a SARIF report, watch it become deduplicated findings in a keyboard-first UI, behind JWT auth, RBAC, and an audit trail. Unit tests, typecheck, and image builds pass; the live end-to-end run is scripted for the next session in [docs/next-session.md](docs/next-session.md). Roadmap: [docs/roadmap.md](docs/roadmap.md).
 
 ## Architecture at a glance
 
@@ -37,26 +37,36 @@ Full details: [docs/architecture/overview.md](docs/architecture/overview.md)
 | [docs/architecture/domain-model.md](docs/architecture/domain-model.md) | Entity catalog, ER diagram, finding lifecycle |
 | [docs/architecture/service-decomposition.md](docs/architecture/service-decomposition.md) | Bounded contexts, event catalog, dependency graph |
 | [docs/adr/](docs/adr/) | Architecture Decision Records (ADR-0001 to ADR-0012) |
+| [docs/architecture/diagrams.md](docs/architecture/diagrams.md) | Diagram index, deployment topology, auth flow |
 | [docs/api/conventions.md](docs/api/conventions.md) | API versioning, pagination, filtering, errors, auth |
 | [docs/security/threat-model.md](docs/security/threat-model.md) | STRIDE threat model of the platform itself |
 | [docs/roadmap.md](docs/roadmap.md) | Milestones M0 to M8 with acceptance criteria |
+| [docs/design/design-language.md](docs/design/design-language.md) | The Ledger design language: tokens, color, type, motion |
+| [docs/design/ux-blueprint.md](docs/design/ux-blueprint.md) | Personas, journeys, interaction architecture |
+| [docs/developer-guide.md](docs/developer-guide.md) | Dev environment, conventions, adding a connector |
+| [docs/operator-guide.md](docs/operator-guide.md) | Running, backups, upgrades, accounts |
+| [docs/overview-for-everyone.md](docs/overview-for-everyone.md) | Non-technical explanation and glossary |
+| [docs/next-session.md](docs/next-session.md) | Verification runbook for the next working session |
 
-## Quickstart (infrastructure only)
+## Quickstart
 
 Requires Docker Desktop (or any Docker Engine with the compose plugin).
 
 ```bash
 cd deploy/compose
-cp .env.example .env        # adjust credentials before first start
+cp .env.example .env        # change every credential; set VULNCONSOLE_SEED_ADMIN_PASSWORD
 docker compose up -d
 docker compose ps           # all services should report healthy
 ```
+
+Then open http://localhost and sign in as `admin` with the seed password from your `.env`. Upload `deploy/sample-data/semgrep-example.sarif` to see the pipeline run end to end. Full walkthrough: [docs/next-session.md](docs/next-session.md).
 
 Local endpoints after startup:
 
 | Service | Endpoint |
 |---------|----------|
-| Traefik (edge) | http://localhost:80 |
+| Web UI (via Traefik) | http://localhost |
+| API + OpenAPI docs | http://localhost/api/v1/docs |
 | Grafana | http://localhost:3000 |
 | Prometheus | http://localhost:9090 |
 | MinIO console | http://localhost:9001 |
@@ -67,7 +77,7 @@ Local endpoints after startup:
 
 Tear down with `docker compose down` (add `-v` to drop volumes).
 
-Note: the compose file is syntax-validated; the stack has not yet been brought up live on this machine (Docker Desktop was not running at scaffold time). Remove this note after the first successful `docker compose up`.
+Note: images build and the compose config validates, but the stack has not yet been brought up live end to end on this machine; the scripted verification pass is [docs/next-session.md](docs/next-session.md). Remove this note once it passes.
 
 ## Repository layout
 

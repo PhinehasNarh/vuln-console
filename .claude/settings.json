@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(docker compose *)",
-      "Bash(docker info *)"
+      "Bash(docker info *)",
+      "Bash(py -3.12 -m venv .venv)",
+      "Bash(./.venv/Scripts/python.exe -m pip install --quiet --upgrade pip)",
+      "Bash(./.venv/Scripts/python.exe -m pip install --quiet -e '.[dev]')",
+      "Bash(./.venv/Scripts/python.exe -m ruff check .)",
+      "Bash(./.venv/Scripts/python.exe -m pip install --quiet pyflakes)",
+      "Bash(./.venv/Scripts/python.exe -m pyflakes src/vulnconsole tests alembic)"
     ]
   }
 }

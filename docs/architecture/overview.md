@@ -21,57 +21,68 @@ A centralized platform that turns raw, noisy scanner output into prioritized, ev
 
 ## System context (C4 level 1)
 
+Color key: purple = people, blue = this platform, gray = external systems.
+
 ```mermaid
 flowchart TB
-    seceng["Security Engineer"]
-    dev["Developer"]
-    mgr["Manager"]
+    seceng(["Security Engineer"])
+    dev(["Developer"])
+    mgr(["Manager"])
 
     subgraph console["Vulnerability Triage & Remediation Console"]
-        core["Ingest, normalize, correlate, enrich,\nscore, triage, remediate, report"]
+        core["Ingest, normalize, correlate, enrich,<br/>score, triage, remediate, report"]
     end
 
-    scanners["Scanners and CI pipelines\nSemgrep, CodeQL, Trivy, Grype, Gitleaks,\nTruffleHog, Syft, SonarQube, Snyk, ..."]
-    feeds["Vulnerability intelligence\nNVD, OSV, EPSS, CISA KEV"]
-    scm["Source control\nGitHub, GitLab"]
-    trackers["Ticketing\nJira, GitHub Issues, GitLab Issues"]
-    chat["Messaging\nSlack, Teams, email"]
-    llm["LLM providers\nAnthropic API, Ollama (local)"]
+    scanners["Scanners and CI pipelines<br/>Semgrep, CodeQL, Trivy, Grype,<br/>Gitleaks, TruffleHog, Syft, Snyk, ..."]
+    feeds["Vulnerability intelligence feeds<br/>NVD, OSV, EPSS, CISA KEV"]
+    scm["Source control<br/>GitHub, GitLab"]
+    trackers["Ticketing<br/>Jira, GitHub Issues, GitLab Issues"]
+    chat["Messaging<br/>Slack, Teams, email"]
+    llm["LLM providers<br/>Anthropic API, Ollama (local)"]
 
-    seceng -->|triage, exceptions, dashboards| console
-    dev -->|fix guidance, repo findings| console
-    mgr -->|KPIs, risk posture| console
+    seceng -->|"triage, exceptions, dashboards"| console
+    dev -->|"fix guidance, repo findings"| console
+    mgr -->|"KPIs, risk posture"| console
 
-    scanners -->|SARIF, CycloneDX, SPDX, native JSON, webhooks| console
-    feeds -->|scheduled sync| console
-    console -->|fix PRs, issue links| scm
-    console -->|create and update tickets| trackers
-    console -->|notifications| chat
-    console -->|summaries, guidance, NL Q&A| llm
+    scanners -->|"scan reports: SARIF, CycloneDX,<br/>SPDX, native JSON, webhooks"| console
+    feeds -->|"scheduled intelligence sync"| console
+    console -->|"fix PRs, issue links"| scm
+    console -->|"create and update tickets"| trackers
+    console -->|"notifications"| chat
+    console -->|"summaries, guidance, NL Q&A"| llm
+
+    classDef person fill:#5b4bb7,stroke:#43389a,color:#ffffff
+    classDef platform fill:#2b6cb0,stroke:#234f80,color:#ffffff
+    classDef external fill:#616a75,stroke:#49505a,color:#ffffff
+    class seceng,dev,mgr person
+    class core platform
+    class scanners,feeds,scm,trackers,chat,llm external
 ```
 
 ## Container view (C4 level 2)
 
+Color key: blue = application code, teal = data stores, gray = edge and observability.
+
 ```mermaid
 flowchart TB
-    user["Browser / CLI / CI"]
+    user(["Browser / CLI / CI"])
 
     subgraph edge["Edge"]
-        traefik["Traefik\nTLS, secure headers, routing"]
+        traefik["Traefik<br/>TLS, secure headers, routing"]
     end
 
     subgraph apps["Application (modular monolith)"]
-        spa["Frontend SPA\nReact + TypeScript"]
-        api["API service\nFastAPI: REST now, GraphQL later"]
-        worker["Worker service\nNATS consumers: parse, normalize,\nenrich, score, notify"]
+        spa["Frontend SPA<br/>React + TypeScript"]
+        api["API service<br/>FastAPI: REST now, GraphQL later"]
+        worker["Worker service<br/>NATS consumers:<br/>parse, normalize, enrich, score"]
     end
 
     subgraph data["Data plane"]
-        pg[("PostgreSQL\nsystem of record")]
-        os[("OpenSearch\nsearch + analytics projections")]
-        redis[("Redis\ncache, rate limits")]
-        minio[("MinIO\nraw artifacts, SBOMs")]
-        nats[("NATS JetStream\ndurable event streams")]
+        pg[("PostgreSQL<br/>system of record")]
+        os[("OpenSearch<br/>search + analytics")]
+        redis[("Redis<br/>cache, rate limits")]
+        minio[("MinIO<br/>raw artifacts, SBOMs")]
+        nats[("NATS JetStream<br/>durable event streams")]
     end
 
     subgraph obs["Observability"]
@@ -79,23 +90,32 @@ flowchart TB
         graf["Grafana"]
     end
 
-    user --> traefik
-    traefik --> spa
-    traefik --> api
-    api --> pg
-    api --> redis
-    api --> os
-    api --> minio
-    api -->|publish| nats
-    nats -->|consume| worker
-    worker --> pg
-    worker --> os
-    worker --> minio
-    worker -->|publish| nats
-    prom -->|scrape| api
-    prom -->|scrape| worker
-    prom -->|scrape| traefik
-    graf --> prom
+    user -->|"HTTPS"| traefik
+    traefik -->|"/"| spa
+    traefik -->|"/api"| api
+    api -->|"read/write"| pg
+    api -->|"rate limits, cache"| redis
+    api -->|"search (M2+)"| os
+    api -->|"store artifacts"| minio
+    api -->|"publish events"| nats
+    nats -->|"deliver events"| worker
+    worker -->|"read/write"| pg
+    worker -->|"index (M2+)"| os
+    worker -->|"fetch artifacts"| minio
+    worker -->|"publish events"| nats
+    prom -.->|"scrape metrics"| api
+    prom -.->|"scrape metrics"| worker
+    prom -.->|"scrape metrics"| traefik
+    graf -->|"query"| prom
+
+    classDef platform fill:#2b6cb0,stroke:#234f80,color:#ffffff
+    classDef store fill:#2c7a7b,stroke:#215a5b,color:#ffffff
+    classDef infra fill:#616a75,stroke:#49505a,color:#ffffff
+    classDef person fill:#5b4bb7,stroke:#43389a,color:#ffffff
+    class spa,api,worker platform
+    class pg,os,redis,minio,nats store
+    class traefik,prom,graf infra
+    class user person
 ```
 
 The API and worker are the same codebase with different composition roots (`platform/api`, `platform/worker`). Both load the bounded contexts under `backend/src/vulnconsole/contexts/`; the API mounts their routers, the worker subscribes their event handlers.
@@ -106,6 +126,7 @@ The core data flow, from scanner output to actionable finding:
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant CI as CI / Upload / Webhook
     participant API as API (Ingestion)
     participant M as MinIO

@@ -16,5 +16,6 @@ Significant decisions are recorded here and never rewritten; superseding a decis
 | [0010](0010-ai-provider-abstraction.md) | AI provider abstraction | Accepted |
 | [0011](0011-frontend-rest-first.md) | React frontend, REST-first API | Accepted |
 | [0012](0012-edge-observability.md) | Traefik edge and observability stack | Accepted |
+| [0013](0013-worker-nats-py.md) | Worker consumes NATS with nats-py directly | Accepted |
 
 Template: Status, Date, Context, Decision, Consequences.

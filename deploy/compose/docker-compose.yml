@@ -168,3 +168,78 @@ services:
     depends_on:
       prometheus:
         condition: service_healthy
+
+  api:
+    build: ../../backend
+    restart: unless-stopped
+    networks: [edge, internal]
+    command: ["api"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vulnconsole}:${POSTGRES_PASSWORD:-change-me-postgres}@postgres:5432/${POSTGRES_DB:-vulnconsole}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-change-me-redis}@redis:6379/0
+      NATS_URL: nats://nats:4222
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-vulnconsole}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-change-me-minio}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-only-secret-change-me}
+      VULNCONSOLE_SEED_ADMIN_PASSWORD: ${VULNCONSOLE_SEED_ADMIN_PASSWORD:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/readyz', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=vulnconsole_edge
+      - traefik.http.routers.api.rule=PathPrefix(`/api`)
+      - traefik.http.routers.api.entrypoints=web
+      - traefik.http.routers.api.priority=20
+      - traefik.http.routers.api.middlewares=security-headers
+      - traefik.http.services.api.loadbalancer.server.port=8000
+      - traefik.http.middlewares.security-headers.headers.frameDeny=true
+      - traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.security-headers.headers.referrerPolicy=no-referrer
+      - traefik.http.middlewares.security-headers.headers.contentSecurityPolicy=default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'
+
+  worker:
+    build: ../../backend
+    restart: unless-stopped
+    networks: [internal]
+    command: ["worker"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vulnconsole}:${POSTGRES_PASSWORD:-change-me-postgres}@postgres:5432/${POSTGRES_DB:-vulnconsole}
+      NATS_URL: nats://nats:4222
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-vulnconsole}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-change-me-minio}
+    depends_on:
+      api:
+        condition: service_healthy
+
+  frontend:
+    build: ../../frontend
+    restart: unless-stopped
+    networks: [edge]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8080/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=vulnconsole_edge
+      - traefik.http.routers.frontend.rule=PathPrefix(`/`)
+      - traefik.http.routers.frontend.entrypoints=web
+      - traefik.http.routers.frontend.priority=1
+      - traefik.http.routers.frontend.middlewares=security-headers
+      - traefik.http.services.frontend.loadbalancer.server.port=8080

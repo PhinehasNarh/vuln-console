@@ -43,15 +43,26 @@ flowchart TB
         integr["Jira, GitHub, Slack, SMTP"]
     end
 
-    client --> traefik
-    webhooks --> traefik
-    traefik --> api
-    api --> data
-    worker --> data
-    worker --> feeds
-    api --> llm
-    worker --> integr
+    client -->|"authenticated HTTPS"| traefik
+    webhooks -->|"signed webhooks"| traefik
+    traefik -->|"routed requests"| api
+    api -->|"reads/writes"| data
+    worker -->|"reads/writes"| data
+    worker -->|"feed sync (validated)"| feeds
+    api -->|"redacted prompts only"| llm
+    worker -->|"tickets, messages"| integr
+
+    classDef untrusted fill:#8c4a4a,stroke:#6e3535,color:#ffffff
+    classDef boundary fill:#616a75,stroke:#49505a,color:#ffffff
+    classDef platform fill:#2b6cb0,stroke:#234f80,color:#ffffff
+    classDef store fill:#2c7a7b,stroke:#215a5b,color:#ffffff
+    class client,webhooks,feeds,llm,integr untrusted
+    class traefik boundary
+    class api,worker platform
+    class pg,redis,minio,os2,nats store
 ```
+
+Color key: red = untrusted, gray = enforcement point, blue = application, teal = data stores.
 
 Boundary rules:
 

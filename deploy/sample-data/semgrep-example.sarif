@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Semgrep",
+          "semanticVersion": "1.86.0",
+          "rules": [
+            {
+              "id": "python.lang.security.sqlalchemy-sql-injection",
+              "shortDescription": { "text": "SQL injection via string-built query" },
+              "defaultConfiguration": { "level": "error" },
+              "properties": { "security-severity": "9.8" }
+            },
+            {
+              "id": "generic.secrets.hardcoded-password",
+              "shortDescription": { "text": "Hardcoded password" },
+              "defaultConfiguration": { "level": "warning" }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "python.lang.security.sqlalchemy-sql-injection",
+          "level": "error",
+          "message": { "text": "Query built with string concatenation of user input" },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "app/db.py" },
+                "region": { "startLine": 10 }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "python.lang.security.sqlalchemy-sql-injection",
+          "level": "error",
+          "message": { "text": "Query built with an f-string of user input" },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "app/db.py" },
+                "region": { "startLine": 42 }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "generic.secrets.hardcoded-password",
+          "level": "warning",
+          "message": { "text": "Hardcoded password in configuration" },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": { "uri": "app/config.py" },
+                "region": { "startLine": 7 }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
