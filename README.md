@@ -48,6 +48,7 @@ Full details: [docs/architecture/overview.md](docs/architecture/overview.md)
 | [docs/overview-for-everyone.md](docs/overview-for-everyone.md) | Non-technical explanation and glossary |
 | [docs/next-session.md](docs/next-session.md) | Verification runbook for the next working session |
 | [docs/journal.md](docs/journal.md) | The build story, told as a 30-day journal |
+| [docs/feature-backlog.md](docs/feature-backlog.md) | The wider menu of next features, grouped by theme |
 
 ## Quickstart
 
