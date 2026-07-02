@@ -76,8 +76,8 @@ export function FindingsTable({ rows, loading, error, selectedId, onSelect }: Fi
               </td>
               <td>{finding.repository}</td>
               <td className="mono location-cell">
-                {finding.file_path ?? "-"}
-                {finding.line !== null ? `:${finding.line}` : ""}
+                {finding.package ??
+                  `${finding.file_path ?? "-"}${finding.line !== null ? `:${finding.line}` : ""}`}
               </td>
               <td className="muted">{finding.tool_names.join(", ")}</td>
               <td className="muted nums">{timeFormat.format(new Date(finding.last_seen))}</td>

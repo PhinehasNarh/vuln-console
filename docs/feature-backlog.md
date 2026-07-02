@@ -4,7 +4,8 @@ Everything we could build next, grouped by theme. The committed sequence lives i
 
 ## Ingestion and coverage
 
-- Trivy, Grype, Gitleaks, TruffleHog, CycloneDX/Syft, SPDX connectors (M2)
+- Trivy, Grype, Gitleaks, TruffleHog connectors (M2: **shipped**, with secret redaction at parse time)
+- CycloneDX/Syft and SPDX SBOM import into the inventory context (M2, remaining)
 - Native connectors where richer than SARIF: CodeQL, Snyk, SonarQube, OWASP Dependency-Check
 - GitHub Security Alerts and GitLab Security Reports webhook ingestion (M5)
 - Jenkins and Azure DevOps pipeline ingestion
@@ -58,7 +59,7 @@ Everything we could build next, grouped by theme. The committed sequence lives i
 
 ## Platform and operations
 
-- OpenSearch-backed full text and faceted search (M2)
+- OpenSearch-backed full text and faceted search (M2, remaining; needs the live stack)
 - GraphQL API alongside REST (M7)
 - OIDC SSO (Authentik/Keycloak) and MFA (M4+)
 - Immutable audit log storage with verification (M4)

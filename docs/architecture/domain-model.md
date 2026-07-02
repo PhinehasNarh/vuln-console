@@ -111,23 +111,25 @@ The load-bearing design decision (ADR-0007): scanner output is never the system 
 - **RawFinding** preserves scanner output verbatim (JSONB). Nothing is lost; scanner disagreements remain inspectable and re-normalization is always possible.
 - **Finding** is the canonical, deduplicated unit that all workflow, scoring, and reporting attach to. Many raw findings from many scanners map onto one canonical finding via the fingerprint.
 
-### Fingerprint (v1 sketch, finalized in Milestone 2)
+### Fingerprint (v2, implemented)
 
 ```
 fingerprint = sha256(
-    finding_class            # sast | sca | secret | iac | container | dast
-  + normalized_rule_key      # CWE/CVE id, or namespaced scanner rule (semgrep:python.sqlalchemy.sqli)
-  + asset_key                # repository full name, or image digest
+    "v2"
+  + finding_class            # sast | sca | secret | iac | container | dast
+  + rule_key                 # class-specific, see below
+  + asset_key                # repository full name
   + location_key             # class-specific, see below
 )
 ```
 
-Location keys per class:
+Identity per class (`derive_identity` in `normalization/domain/fingerprint.py`):
 
-- **sast / iac**: file path + hash of the normalized code context around the finding (line numbers drift between commits; surrounding-context hashing survives edits elsewhere in the file)
-- **sca**: package purl without version (an upgrade that still carries the CVE must not mint a new finding)
-- **secret**: salted hash of the secret value + file path (the same leaked credential in two files correlates through the value hash)
-- **container**: image digest + package purl
+- **sca / container**: rule = the vulnerability id (CVE/GHSA, uppercased), location = the versionless purl (fallback: package name, then path). Trivy and Grype reporting the same CVE in the same package produce the same fingerprint, and upgrading the package does not mint a new finding.
+- **secret**: rule = the constant `secret`, location = file path + sha256 of the secret value. Gitleaks and TruffleHog finding the same credential in the same file correlate regardless of rule naming; the same credential in two files stays two findings. Secret values are hashed and redacted inside the connector; plaintext never reaches storage.
+- **sast / iac**: rule = tool-namespaced rule id, location = file path. Context hashing to survive line drift is a future fingerprint version.
+
+Connectors supply the class-specific inputs as `hints` on each raw finding (standard keys: `vuln_id`, `purl_base`, `package`, `installed_version`, `fixed_version`, `secret_hash`).
 
 ## Finding lifecycle
 

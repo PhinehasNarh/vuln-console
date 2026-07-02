@@ -1,0 +1,50 @@
+{
+  "matches": [
+    {
+      "vulnerability": {
+        "id": "CVE-2024-35195",
+        "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2024-35195",
+        "severity": "Medium",
+        "description": "Requests is a HTTP library. Prior to 2.32.0, when making requests through a Requests Session, if the first request is made with verify=False, all subsequent requests ignore cert verification.",
+        "fix": {
+          "versions": ["2.32.0"],
+          "state": "fixed"
+        }
+      },
+      "artifact": {
+        "name": "requests",
+        "version": "2.31.0",
+        "type": "python",
+        "purl": "pkg:pypi/requests@2.31.0",
+        "locations": [{ "path": "app/requirements.txt" }]
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "GHSA-56pw-mpj4-fxww",
+        "dataSource": "https://github.com/advisories/GHSA-56pw-mpj4-fxww",
+        "severity": "High",
+        "description": "Flask-CORS improper regex path matching allows bypassing CORS restrictions.",
+        "fix": {
+          "versions": ["4.0.1"],
+          "state": "fixed"
+        }
+      },
+      "artifact": {
+        "name": "flask-cors",
+        "version": "4.0.0",
+        "type": "python",
+        "purl": "pkg:pypi/flask-cors@4.0.0",
+        "locations": [{ "path": "app/requirements.txt" }]
+      }
+    }
+  ],
+  "source": {
+    "type": "directory",
+    "target": "."
+  },
+  "descriptor": {
+    "name": "grype",
+    "version": "0.80.0"
+  }
+}

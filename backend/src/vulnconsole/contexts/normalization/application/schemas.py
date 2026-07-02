@@ -19,6 +19,9 @@ class FindingOut(BaseModel):
     repository: str
     file_path: str | None
     line: int | None
+    package: str | None
+    cve_id: str | None
+    fixed_version: str | None
     tool_names: list[str]
     first_seen: datetime
     last_seen: datetime

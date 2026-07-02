@@ -12,11 +12,23 @@ from vulnconsole.contexts.ingestion.domain.models import (
     SCAN_STATUS_NORMALIZED,
     SCAN_STATUS_PARSED,
 )
-from vulnconsole.contexts.normalization.domain.fingerprint import compute_fingerprint
+from vulnconsole.contexts.normalization.domain.fingerprint import (
+    compute_fingerprint,
+    derive_identity,
+)
 from vulnconsole.contexts.normalization.domain.models import Finding, FindingSource
 from vulnconsole.shared.events import FINDING_CREATED, FINDING_UPDATED, EventBus, EventEnvelope
 
 logger = structlog.get_logger(__name__)
+
+_SEVERITY_ORDER = ("info", "low", "medium", "high", "critical")
+
+
+def _severity_rank(severity: str) -> int:
+    try:
+        return _SEVERITY_ORDER.index(severity)
+    except ValueError:
+        return 0
 
 
 async def normalize_scan(session: AsyncSession, bus: EventBus, scan_id: uuid.UUID) -> None:
@@ -49,12 +61,25 @@ async def normalize_scan(session: AsyncSession, bus: EventBus, scan_id: uuid.UUI
     for raw in raws:
         if raw.id in already_linked:
             continue
+        hints: dict[str, str] = raw.hints or {}
+        rule_key, location_key = derive_identity(
+            finding_class=raw.finding_class,
+            tool=tool,
+            rule_id=raw.rule_id,
+            file_path=raw.file_path,
+            hints=hints,
+        )
         fingerprint = compute_fingerprint(
             finding_class=raw.finding_class,
-            rule_key=f"{tool}:{raw.rule_id}",
+            rule_key=rule_key,
             asset_key=scan.repository,
-            location_key=raw.file_path or "",
+            location_key=location_key,
         )
+        package = hints.get("package")
+        if package and hints.get("installed_version"):
+            package = f"{package}@{hints['installed_version']}"
+        vuln_id = hints.get("vuln_id")
+
         finding = seen_this_run.get(fingerprint) or await session.scalar(
             select(Finding).where(Finding.fingerprint == fingerprint)
         )
@@ -62,12 +87,15 @@ async def normalize_scan(session: AsyncSession, bus: EventBus, scan_id: uuid.UUI
             finding = Finding(
                 fingerprint=fingerprint,
                 finding_class=raw.finding_class,
-                rule_key=f"{tool}:{raw.rule_id}",
+                rule_key=rule_key,
                 title=raw.title,
                 severity=raw.severity,
                 repository=scan.repository,
                 file_path=raw.file_path,
                 line=raw.line,
+                package=package,
+                cve_id=vuln_id,
+                fixed_version=hints.get("fixed_version"),
                 tool_names=[tool],
                 first_seen=now,
                 last_seen=now,
@@ -77,9 +105,14 @@ async def normalize_scan(session: AsyncSession, bus: EventBus, scan_id: uuid.UUI
             created_ids.add(finding.id)
         else:
             finding.last_seen = now
-            finding.severity = raw.severity
-            finding.title = raw.title
-            finding.line = raw.line
+            # Keep the worst severity across scanners rather than the latest word.
+            if _severity_rank(raw.severity) > _severity_rank(finding.severity):
+                finding.severity = raw.severity
+                finding.title = raw.title
+            finding.line = raw.line if raw.line is not None else finding.line
+            finding.package = package or finding.package
+            finding.cve_id = vuln_id or finding.cve_id
+            finding.fixed_version = hints.get("fixed_version") or finding.fixed_version
             if tool not in finding.tool_names:
                 finding.tool_names = [*finding.tool_names, tool]
             if finding.id not in created_ids:

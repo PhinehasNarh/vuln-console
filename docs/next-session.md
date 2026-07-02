@@ -108,6 +108,17 @@ CI on GitHub runs: typography (dash ban), compose config validation, ruff, backe
 - Frontend 404 on /api: Traefik router priorities; `docker compose logs traefik`.
 - Findings never appear: `docker compose logs worker`; the scan row's `status`/`error` columns (`GET /api/v1/scans`) say which stage failed.
 
+## Step 8: Milestone 2 correlation checks (added later on 2026-07-02)
+
+Four more connectors and fingerprint v2 landed after this runbook was first written (32 unit tests cover them, including cross-scanner correlation proofs). Live checks:
+
+1. Upload `deploy/sample-data/trivy-example.json` AND `deploy/sample-data/grype-example.json` to the **same repository**: CVE-2024-35195 in `requests` must appear as **one finding** whose inspector shows both `trivy` and `grype` under "reported by", with package and fixed-in version populated.
+2. Upload `deploy/sample-data/gitleaks-example.json` AND `deploy/sample-data/trufflehog-example.jsonl` to the same repository: the AWS key in `config/prod.env` must be **one finding** reported by both tools.
+3. Confirm redaction end to end: `GET /api/v1/scans` then inspect a secret scan's raw findings in the DB; `SELECT payload FROM ingestion.raw_findings WHERE finding_class = 'secret';` must contain `[REDACTED]` and never a plaintext secret.
+4. `?cve=CVE-2024-35195` filter on `/api/v1/findings` returns exactly the correlated finding.
+
+(The api container runs migration 0002 automatically on start.)
+
 ## After verification passes
 
 1. Remove the "not yet live-tested" note from README.md.

@@ -16,6 +16,9 @@ class RawFindingDraft(BaseModel):
     file_path: str | None = None
     line: int | None = None
     payload: dict[str, Any]
+    # Correlation hints consumed by fingerprint v2 (ADR-0007): standard keys are
+    # vuln_id, purl_base, package, installed_version, fixed_version, secret_hash.
+    hints: dict[str, str] = Field(default_factory=dict)
 
 
 class ParseResult(BaseModel):
@@ -57,3 +60,51 @@ def sniff_format(artifact: bytes) -> Connector | None:
 
 def supported_formats() -> list[str]:
     return sorted(_REGISTRY)
+
+
+# ---- shared helpers for connectors ----
+
+_NAME_SEVERITY: dict[str, Severity] = {
+    "critical": "critical",
+    "high": "high",
+    "medium": "medium",
+    "moderate": "medium",
+    "low": "low",
+    "negligible": "info",
+    "unknown": "info",
+    "info": "info",
+}
+
+
+def normalize_severity_name(value: str | None, default: Severity = "info") -> Severity:
+    if not value:
+        return default
+    return _NAME_SEVERITY.get(value.strip().lower(), default)
+
+
+def purl_base(purl: str | None) -> str | None:
+    """Strip version and qualifiers from a package URL.
+
+    pkg:pypi/requests@2.31.0?arch=any -> pkg:pypi/requests, so an upgrade that
+    still carries the CVE does not mint a new finding (ADR-0007).
+    """
+    if not purl:
+        return None
+    without_qualifiers = purl.split("?", 1)[0]
+    base, at, _version = without_qualifiers.rpartition("@")
+    return base if at else without_qualifiers
+
+
+def hash_secret(value: str) -> str:
+    """Stable hash of a secret value for cross-scanner correlation.
+
+    Unsalted on purpose: the same leaked credential must produce the same hash
+    across scans and scanners. Only high-entropy secret material is hashed, and
+    access to secret findings is RBAC-gated (threat model).
+    """
+    import hashlib
+
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+REDACTED = "[REDACTED]"

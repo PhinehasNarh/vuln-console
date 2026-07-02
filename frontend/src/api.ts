@@ -18,6 +18,9 @@ export interface Finding {
   repository: string;
   file_path: string | null;
   line: number | null;
+  package: string | null;
+  cve_id: string | null;
+  fixed_version: string | null;
   tool_names: string[];
   first_seen: string;
   last_seen: string;

@@ -1,0 +1,28 @@
+[
+  {
+    "RuleID": "aws-access-key-id",
+    "Description": "AWS Access Key ID",
+    "File": "config/prod.env",
+    "StartLine": 12,
+    "EndLine": 12,
+    "Secret": "AKIAIOSFODNN7EXAMPLE",
+    "Match": "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE",
+    "Commit": "3f1c2b9a8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a",
+    "Author": "dev@example.com",
+    "Date": "2026-06-28T14:03:00Z",
+    "Fingerprint": "3f1c2b9a:config/prod.env:aws-access-key-id:12"
+  },
+  {
+    "RuleID": "generic-api-key",
+    "Description": "Generic API Key",
+    "File": "scripts/deploy.sh",
+    "StartLine": 4,
+    "EndLine": 4,
+    "Secret": "sk_live_51HxTestTestTestTestTest",
+    "Match": "STRIPE_KEY=sk_live_51HxTestTestTestTestTest",
+    "Commit": "9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b",
+    "Author": "dev@example.com",
+    "Date": "2026-06-30T09:41:00Z",
+    "Fingerprint": "9a8b7c6d:scripts/deploy.sh:generic-api-key:4"
+  }
+]

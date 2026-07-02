@@ -56,6 +56,7 @@ async def list_findings(
     repository: str | None = None,
     finding_class: str | None = None,
     tool: str | None = None,
+    cve: str | None = None,
     limit: int = DEFAULT_LIMIT,
     cursor: str | None = None,
 ) -> Page[FindingOut]:
@@ -74,6 +75,8 @@ async def list_findings(
         query = query.where(Finding.finding_class == finding_class)
     if tool:
         query = query.where(Finding.tool_names.contains([tool.lower()]))
+    if cve:
+        query = query.where(Finding.cve_id == cve.strip().upper())
     if cursor:
         position = decode_cursor(cursor)
         first_seen = datetime.fromisoformat(str(position["f"]))

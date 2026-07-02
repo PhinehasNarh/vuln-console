@@ -184,6 +184,7 @@ async def parse_scan(session: AsyncSession, bus: EventBus, scan_id: uuid.UUID) -
                 file_path=draft.file_path,
                 line=draft.line,
                 payload=draft.payload,
+                hints=draft.hints,
             )
         )
     scan.tool_name = result.tool_name

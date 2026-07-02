@@ -54,6 +54,24 @@ export function Inspector({ findingId, onClose }: { findingId: string; onClose: 
             </dd>
             <dt>class</dt>
             <dd>{finding.finding_class}</dd>
+            {finding.package && (
+              <>
+                <dt>package</dt>
+                <dd className="mono">{finding.package}</dd>
+              </>
+            )}
+            {finding.cve_id && (
+              <>
+                <dt>cve</dt>
+                <dd className="mono">{finding.cve_id}</dd>
+              </>
+            )}
+            {finding.fixed_version && (
+              <>
+                <dt>fixed in</dt>
+                <dd className="mono">{finding.fixed_version}</dd>
+              </>
+            )}
             <dt>reported by</dt>
             <dd>{finding.tool_names.join(", ")}</dd>
             <dt>first seen</dt>
