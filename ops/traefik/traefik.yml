@@ -1,0 +1,29 @@
+# Traefik static configuration (Milestone 0).
+# Routers and security-header middlewares for api/frontend arrive with the
+# application containers in Milestone 1, via Docker labels.
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: vulnconsole_edge
+
+api:
+  dashboard: false
+
+ping: {}
+
+metrics:
+  prometheus: {}
+
+log:
+  level: INFO
+  format: json
+
+accessLog:
+  format: json

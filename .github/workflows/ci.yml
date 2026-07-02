@@ -1,0 +1,43 @@
+# Milestone 0 CI: structural checks only. Test and build jobs activate as
+# application code lands in Milestone 1.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  typography:
+    name: No em or en dashes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Grep for U+2013 and U+2014
+        run: |
+          if grep -rInP '[\x{2013}\x{2014}]' --exclude-dir=.git .; then
+            echo "Found em or en dashes; use colons, commas, or hyphens instead."
+            exit 1
+          fi
+
+  compose-validate:
+    name: Compose config validates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker compose config
+        run: docker compose -f deploy/compose/docker-compose.yml config --quiet
+
+  backend-lint:
+    name: Backend lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Ruff
+        run: |
+          pip install ruff
+          ruff check backend
