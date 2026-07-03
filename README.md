@@ -46,6 +46,7 @@ Full details: [docs/architecture/overview.md](docs/architecture/overview.md)
 | [docs/developer-guide.md](docs/developer-guide.md) | Dev environment, conventions, adding a connector |
 | [docs/operator-guide.md](docs/operator-guide.md) | Running, backups, upgrades, accounts |
 | [docs/overview-for-everyone.md](docs/overview-for-everyone.md) | Non-technical explanation and glossary |
+| [docs/how-it-all-works.md](docs/how-it-all-works.md) | Plain-language tour of every tool and how they fit together |
 | [docs/next-session.md](docs/next-session.md) | Verification runbook for the next working session |
 | [docs/journal.md](docs/journal.md) | The build story, told as a 30-day journal |
 | [docs/feature-backlog.md](docs/feature-backlog.md) | The wider menu of next features, grouped by theme |

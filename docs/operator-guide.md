@@ -35,6 +35,20 @@ Roles: `admin`, `security-engineer`, `developer`, `viewer`. CI systems should ne
 | opensearch | search (used from M2) | opensearch-data |
 | prometheus, grafana | metrics and dashboards | prometheus-data, grafana-data |
 
+## Notifications and SLA
+
+Findings get a remediation deadline by severity (critical 3 days, high 7, medium 30, low 90; info none), tunable with `SLA_DAYS_*` in `.env`. A worker loop scans for breaches every `SLA_SCAN_INTERVAL_SECONDS` (default 60) and each breach fires once.
+
+Notifications (on owner assignment and on SLA breach) go to every channel you configure; unset channels are skipped, and with none set the notification is still written to the `notifications.notifications` table for audit. Configure in `.env` (applied to both api and worker via the compose `notify-env` anchor):
+
+| Channel | Settings |
+|---------|----------|
+| Slack | `SLACK_WEBHOOK_URL` (an incoming-webhook URL) |
+| Microsoft Teams | `TEAMS_WEBHOOK_URL` (an incoming-webhook URL) |
+| Email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`, `NOTIFY_EMAIL_TO` |
+
+`NOTIFICATIONS_BASE_URL` sets the link back to a finding in each message. Inspect delivery history: `SELECT event, channel, status, created_at FROM notifications.notifications ORDER BY created_at DESC LIMIT 20;`.
+
 ## Health
 
 - Liveness: `GET /healthz` on the api; readiness with per-dependency detail: `GET /readyz` (checks postgres, nats, redis).
