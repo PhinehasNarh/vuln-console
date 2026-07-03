@@ -230,6 +230,10 @@ services:
     build: ../../frontend
     restart: unless-stopped
     networks: [edge]
+    ports:
+      # Direct local access that does not depend on Traefik's docker-socket
+      # discovery (flaky on Docker Desktop). Traefik still routes in prod.
+      - "127.0.0.1:8080:8080"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8080/"]
       interval: 15s
