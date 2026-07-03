@@ -30,13 +30,16 @@ def test_trivy_parse_sample() -> None:
 
     zlib, openssl, requests_vuln = result.findings
     assert zlib.severity == "critical"
-    assert zlib.finding_class == "container"  # ArtifactType is container_image
+    assert zlib.finding_class == "container"  # os-pkgs in a container image
     assert zlib.hints["vuln_id"] == "CVE-2023-45853"
     assert zlib.hints["purl_base"] == "pkg:deb/debian/zlib1g"
     assert "fixed_version" not in zlib.hints  # empty FixedVersion is omitted
 
     assert openssl.hints["fixed_version"] == "3.0.14-1~deb12u2"
+    # A language dependency (pip) is SCA even inside a container image, so it
+    # correlates with a Grype directory scan of the same package.
     assert requests_vuln.severity == "medium"
+    assert requests_vuln.finding_class == "sca"
     assert requests_vuln.hints["purl_base"] == "pkg:pypi/requests"
 
 
@@ -53,7 +56,7 @@ def test_grype_parse_sample() -> None:
 
     requests_vuln, flask_cors = result.findings
     assert requests_vuln.severity == "medium"
-    assert requests_vuln.finding_class == "sca"
+    assert requests_vuln.finding_class == "sca"  # python artifact type
     assert requests_vuln.hints["vuln_id"] == "CVE-2024-35195"
     assert requests_vuln.hints["purl_base"] == "pkg:pypi/requests"
     assert requests_vuln.hints["fixed_version"] == "2.32.0"

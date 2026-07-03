@@ -33,13 +33,13 @@ class TrivyConnector:
             raise ConnectorError("artifact is not a Trivy report: missing 'Results' list")
 
         artifact_type = document.get("ArtifactType", "")
-        vuln_class: FindingClass = "container" if artifact_type == "container_image" else "sca"
 
         findings: list[RawFindingDraft] = []
         for result in document["Results"]:
             if not isinstance(result, dict):
                 continue
             target = str(result.get("Target") or "")
+            vuln_class = self._vuln_class(result.get("Class"), artifact_type)
             for vuln in result.get("Vulnerabilities") or []:
                 findings.append(self._vulnerability(vuln, target, vuln_class))
             for misconfig in result.get("Misconfigurations") or []:
@@ -47,6 +47,17 @@ class TrivyConnector:
             for secret in result.get("Secrets") or []:
                 findings.append(self._secret(secret, target))
         return ParseResult(tool_name="Trivy", findings=findings)
+
+    @staticmethod
+    def _vuln_class(result_class: object, artifact_type: str) -> FindingClass:
+        # Language dependencies are SCA regardless of where they live, so a pip
+        # package in a container image correlates with a Grype directory scan of
+        # the same package. OS/distro packages stay container-scoped.
+        if result_class == "lang-pkgs":
+            return "sca"
+        if result_class == "os-pkgs":
+            return "container" if artifact_type == "container_image" else "sca"
+        return "sca"
 
     def _vulnerability(
         self, vuln: dict[str, Any], target: str, finding_class: FindingClass

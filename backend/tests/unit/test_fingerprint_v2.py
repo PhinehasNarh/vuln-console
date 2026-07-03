@@ -41,8 +41,10 @@ def test_trivy_and_grype_agree_on_the_same_cve() -> None:
     trivy_requests = next(f for f in trivy_findings if f.hints.get("vuln_id") == "CVE-2024-35195")
     grype_requests = next(f for f in grype_findings if f.hints.get("vuln_id") == "CVE-2024-35195")
 
-    # Different classes would split them; the shared sca surface is what merges.
-    trivy_requests = trivy_requests.model_copy(update={"finding_class": "sca"})
+    # Both connectors classify a pip package as sca, so no override is needed:
+    # the CVE in pkg:pypi/requests fingerprints identically across the two tools.
+    assert trivy_requests.finding_class == "sca"
+    assert grype_requests.finding_class == "sca"
     assert _fingerprint(trivy_requests, "trivy") == _fingerprint(grype_requests, "grype")
 
 

@@ -5,11 +5,15 @@ from typing import Any
 
 from vulnconsole.contexts.ingestion.connectors.base import (
     ConnectorError,
+    FindingClass,
     ParseResult,
     RawFindingDraft,
     normalize_severity_name,
     purl_base,
 )
+
+# Grype artifact types that are OS/distro packages rather than app dependencies.
+_OS_PACKAGE_TYPES = {"deb", "rpm", "apk", "rpmdb", "msrc-kb", "portage"}
 
 
 class GrypeConnector:
@@ -41,6 +45,9 @@ class GrypeConnector:
         vuln_id = str(vuln.get("id") or "unknown")
         package = str(art.get("name") or "unknown")
         version = str(art.get("version") or "")
+        finding_class: FindingClass = (
+            "container" if art.get("type") in _OS_PACKAGE_TYPES else "sca"
+        )
 
         locations = art.get("locations") or []
         file_path = None
@@ -68,7 +75,7 @@ class GrypeConnector:
             rule_id=vuln_id[:300],
             title=title[:2000],
             severity=normalize_severity_name(vuln.get("severity")),
-            finding_class="sca",
+            finding_class=finding_class,
             file_path=file_path,
             line=None,
             payload=match,
