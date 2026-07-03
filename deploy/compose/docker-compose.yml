@@ -197,6 +197,9 @@ services:
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-change-me-minio}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-only-secret-change-me}
       VULNCONSOLE_SEED_ADMIN_PASSWORD: ${VULNCONSOLE_SEED_ADMIN_PASSWORD:-}
+      REPORT_COMPANY_NAME: ${REPORT_COMPANY_NAME:-Your Organization}
+      REPORT_LOGO_PATH: ${REPORT_LOGO_PATH:-}
+      REPORT_CONFIDENTIAL_LABEL: ${REPORT_CONFIDENTIAL_LABEL:-CONFIDENTIAL}
     depends_on:
       postgres:
         condition: service_healthy

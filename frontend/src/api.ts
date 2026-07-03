@@ -112,6 +112,24 @@ export function assignFinding(id: string, owner: string | null): Promise<Finding
   });
 }
 
+// Fetch the branded audit report (authenticated) and open it in a new tab, where
+// the user can read it or print to PDF. `since`/`until` are ISO date strings.
+export async function openAuditReport(since: string, until: string): Promise<void> {
+  const params = new URLSearchParams({
+    since: `${since}T00:00:00Z`,
+    until: `${until}T23:59:59Z`,
+  });
+  const res = await fetch(`${BASE}/reports/audit?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${getToken() ?? ""}` },
+  });
+  if (!res.ok) throw new Error(await problemDetail(res));
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank", "noopener");
+  // Revoke shortly after so the new tab has time to load the document.
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 export function uploadScan(file: File, repository: string): Promise<Scan> {
   const form = new FormData();
   form.append("file", file);

@@ -15,6 +15,7 @@ from vulnconsole.contexts.identity.api.router import router as identity_router
 from vulnconsole.contexts.ingestion.api.router import router as ingestion_router
 from vulnconsole.contexts.ingestion.infrastructure.artifacts import ensure_bucket
 from vulnconsole.contexts.normalization.api.router import router as findings_router
+from vulnconsole.contexts.reporting.api.router import router as reporting_router
 from vulnconsole.shared.config import get_settings
 from vulnconsole.shared.db import get_engine
 from vulnconsole.shared.events import EventBus
@@ -60,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(identity_router, prefix="/api/v1")
     app.include_router(ingestion_router, prefix="/api/v1")
     app.include_router(findings_router, prefix="/api/v1")
+    app.include_router(reporting_router, prefix="/api/v1")
 
     @app.get("/healthz", include_in_schema=False)
     async def healthz() -> dict[str, str]:

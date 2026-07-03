@@ -54,6 +54,7 @@ Everything we could build next, grouped by theme. The committed sequence lives i
 
 ## Dashboards and reporting
 
+- Branded, confidential, time-framed audit report with executive summary, findings, and an incident timeline from the audit log; company logo and confidential watermark; print-to-PDF (**shipped**). Next: native PDF rendering (WeasyPrint) and scheduled delivery
 - Security engineer dashboard: KEV exposure, aging, MTTR, backlog (M4)
 - Developer view: my repos, my PRs, my dependency upgrades (M7)
 - Management scorecards: risk posture trends, remediation velocity, per business unit (M7)

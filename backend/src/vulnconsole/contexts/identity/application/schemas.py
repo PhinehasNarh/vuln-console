@@ -40,3 +40,14 @@ class ApiTokenCreatedOut(BaseModel):
     id: uuid.UUID
     name: str
     token: str  # plaintext, shown exactly once
+
+
+class AuditEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    actor: str
+    action: str
+    entity_type: str
+    entity_id: str
+    detail: dict[str, object]
+    created_at: datetime

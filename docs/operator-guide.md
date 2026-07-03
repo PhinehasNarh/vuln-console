@@ -49,6 +49,20 @@ Notifications (on owner assignment and on SLA breach) go to every channel you co
 
 `NOTIFICATIONS_BASE_URL` sets the link back to a finding in each message. Inspect delivery history: `SELECT event, channel, status, created_at FROM notifications.notifications ORDER BY created_at DESC LIMIT 20;`.
 
+## Branded audit reports
+
+Users export a confidential, print-ready audit report for a time frame (`GET /api/v1/reports/audit?since=...&until=...`, or the "export report" button in the app). It contains an executive summary, the findings in the period, and an incident timeline built from the audit log, and it opens in a new tab to read or print to PDF.
+
+Brand it via `.env` (read by the api):
+
+| Setting | Effect |
+|---------|--------|
+| `REPORT_COMPANY_NAME` | Name shown in the header and footer |
+| `REPORT_LOGO_PATH` | Path (inside the api container) to a PNG/JPG/SVG logo, inlined into the report; mount your file to use it. Without it, a monogram from the company name is drawn |
+| `REPORT_CONFIDENTIAL_LABEL` | The confidential marking and watermark text (default `CONFIDENTIAL`) |
+
+To supply a logo, mount it into the api service, for example add under the api service in compose: `volumes: ["./brand/logo.png:/brand/logo.png:ro"]` and set `REPORT_LOGO_PATH=/brand/logo.png`.
+
 ## Health
 
 - Liveness: `GET /healthz` on the api; readiness with per-dependency detail: `GET /readyz` (checks postgres, nats, redis).

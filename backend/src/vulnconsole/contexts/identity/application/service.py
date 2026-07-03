@@ -9,6 +9,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from vulnconsole.contexts.identity.application.schemas import AuditEventOut
 from vulnconsole.contexts.identity.domain.models import ApiToken, AuditEvent, User
 from vulnconsole.contexts.identity.domain.roles import ROLES
 from vulnconsole.shared.problems import ProblemError
@@ -36,6 +37,19 @@ def record_audit(
             detail=detail or {},
         )
     )
+
+
+async def list_audit_events(
+    session: AsyncSession, *, since: datetime, until: datetime, limit: int = 1000
+) -> list[AuditEventOut]:
+    """Audit trail within a time window, oldest first (the incident timeline)."""
+    result = await session.scalars(
+        select(AuditEvent)
+        .where(AuditEvent.created_at >= since, AuditEvent.created_at <= until)
+        .order_by(AuditEvent.created_at)
+        .limit(limit)
+    )
+    return [AuditEventOut.model_validate(row) for row in result]
 
 
 async def get_user_by_username(session: AsyncSession, username: str) -> User | None:

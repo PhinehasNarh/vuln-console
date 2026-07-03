@@ -16,7 +16,7 @@ The platform is a modular monolith (ADR-0002) of 11 bounded contexts. Each conte
 | 8 | Remediation | `remediation` | Recommendations, upgrade paths, fix PR generation, compensating controls, suppression management | `remediation.recommendation.created`, `remediation.fix_pr.opened` | `risk.finding.scored`, `triage.finding.status_changed` |
 | 9 | AI Services | `ai` | LLM provider abstraction, summaries, exploitability explanations, NL Q&A, clustering | `ai.summary.generated` | on-demand via application interface |
 | 10 | Notifications & Integrations | `notifications` | Slack/Teams/email dispatch, Jira/GitHub/GitLab tickets, outbound webhooks | `notifications.message.dispatched`, `notifications.ticket.created` | `risk.sla.breached`, `triage.*`, `risk.finding.scored` |
-| 11 | Reporting & Analytics | `reporting` | OpenSearch projections, dashboards, KPIs, MTTR, trends | (none) | all domain events (projection builder) |
+| 11 | Reporting & Analytics | `reporting` | Branded audit report export (implemented); OpenSearch projections, dashboards, KPIs, MTTR, trends | (none) | reads findings + audit log via application layers |
 
 Shared kernel (`shared/`): event envelope and publishing, configuration, database session management, result types, pagination primitives, authenticated-principal type. Kept deliberately small; anything context-specific does not belong there.
 

@@ -53,6 +53,12 @@ class Settings(BaseSettings):
     notify_email_to: str = ""
     notifications_base_url: str = "http://localhost:8080"
 
+    # Branded audit report export.
+    report_company_name: str = "Your Organization"
+    report_logo_path: str = ""  # optional PNG/JPG/SVG, inlined into the report
+    report_confidential_label: str = "CONFIDENTIAL"
+    report_default_days: int = 30
+
 
 @lru_cache
 def get_settings() -> Settings:

@@ -75,6 +75,8 @@ Milestones are vertical slices: each one ships working, tested, documented capab
 
 **Acceptance criteria**: a fix PR opens against a sample repository with passing description and diff; GraphQL serves the findings graph with authz parity to REST.
 
+**Shipped early**: branded, confidential, time-framed audit report export (`GET /api/v1/reports/audit`) with executive summary, findings, and an audit-log incident timeline, company logo and watermark, print-to-PDF. Remaining: native PDF rendering, dashboards, GraphQL.
+
 ## M8: Hardening and portability
 
 **Scope**: performance/load testing and remediation of hot paths; Kubernetes manifests or Helm chart; secrets management (Vault or SOPS); OpenSearch security enabled; internal TLS; backup/restore runbooks; operator guide; production deployment guide.

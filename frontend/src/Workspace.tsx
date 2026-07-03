@@ -6,6 +6,7 @@ import { CommandBar } from "./CommandBar";
 import { CommandPalette, type PaletteAction } from "./CommandPalette";
 import { FindingsTable } from "./FindingsTable";
 import { Inspector } from "./Inspector";
+import { ReportDialog } from "./ReportDialog";
 import { UploadSheet } from "./UploadSheet";
 
 interface WorkspaceProps {
@@ -20,6 +21,7 @@ export function Workspace({ theme, onToggleTheme, onSignOut }: WorkspaceProps) {
   const [cursor, setCursor] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -93,6 +95,7 @@ export function Workspace({ theme, onToggleTheme, onSignOut }: WorkspaceProps) {
     () => [
       { id: "search", label: "Focus repository search", hint: "/", run: () => searchRef.current?.focus() },
       { id: "upload", label: "Upload scan report", run: () => setUploadOpen(true) },
+      { id: "report", label: "Export audit report", run: () => setReportOpen(true) },
       {
         id: "sev-critical",
         label: "Filter severity: critical only",
@@ -144,6 +147,7 @@ export function Workspace({ theme, onToggleTheme, onSignOut }: WorkspaceProps) {
         onToggleTheme={onToggleTheme}
         onSignOut={onSignOut}
         onPalette={() => setPaletteOpen(true)}
+        onReport={() => setReportOpen(true)}
       />
       {uploadOpen && (
         <UploadSheet
@@ -215,6 +219,7 @@ export function Workspace({ theme, onToggleTheme, onSignOut }: WorkspaceProps) {
       {paletteOpen && (
         <CommandPalette actions={paletteActions} onClose={() => setPaletteOpen(false)} />
       )}
+      {reportOpen && <ReportDialog onClose={() => setReportOpen(false)} />}
     </div>
   );
 }

@@ -8,6 +8,7 @@ interface CommandBarProps {
   onToggleTheme: () => void;
   onSignOut: () => void;
   onPalette: () => void;
+  onReport: () => void;
 }
 
 export function CommandBar({
@@ -18,6 +19,7 @@ export function CommandBar({
   onToggleTheme,
   onSignOut,
   onPalette,
+  onReport,
 }: CommandBarProps) {
   return (
     <header className="command-bar">
@@ -38,6 +40,9 @@ export function CommandBar({
       <nav className="bar-actions" aria-label="Workspace actions">
         <button className="ghost small" onClick={onPalette} title="Command palette (Ctrl+K)">
           commands <kbd>ctrl k</kbd>
+        </button>
+        <button className="ghost small" onClick={onReport}>
+          export report
         </button>
         <button className="primary small" onClick={onUpload}>
           upload report

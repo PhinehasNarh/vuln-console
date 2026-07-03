@@ -12,6 +12,7 @@ from vulnconsole.contexts.ingestion.application.service import (
     SCAN_STATUS_NORMALIZED,
     SCAN_STATUS_PARSED,
 )
+from vulnconsole.contexts.normalization.application.schemas import FindingOut
 from vulnconsole.contexts.normalization.domain.fingerprint import (
     compute_fingerprint,
     derive_identity,
@@ -166,6 +167,19 @@ async def normalize_scan(session: AsyncSession, bus: EventBus, scan_id: uuid.UUI
 
 async def get_finding(session: AsyncSession, finding_id: uuid.UUID) -> Finding | None:
     return await session.get(Finding, finding_id)
+
+
+async def list_findings_created_between(
+    session: AsyncSession, *, since: datetime, until: datetime, limit: int = 2000
+) -> list[FindingOut]:
+    """Canonical findings first seen within a window, for time-framed reports."""
+    result = await session.scalars(
+        select(Finding)
+        .where(Finding.first_seen >= since, Finding.first_seen <= until)
+        .order_by(Finding.severity, Finding.first_seen.desc())
+        .limit(limit)
+    )
+    return [FindingOut.from_finding(row) for row in result]
 
 
 async def assign_finding(
