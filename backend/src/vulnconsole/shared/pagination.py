@@ -3,7 +3,7 @@
 import base64
 import binascii
 import json
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -12,8 +12,6 @@ from vulnconsole.shared.problems import ProblemError
 DEFAULT_LIMIT = 50
 MAX_LIMIT = 200
 
-T = TypeVar("T")
-
 
 class PageMeta(BaseModel):
     next_cursor: str | None
@@ -21,7 +19,7 @@ class PageMeta(BaseModel):
     limit: int
 
 
-class Page(BaseModel, Generic[T]):
+class Page[T](BaseModel):
     data: list[T]
     pagination: PageMeta
 

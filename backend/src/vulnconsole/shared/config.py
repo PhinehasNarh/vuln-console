@@ -20,11 +20,11 @@ class Settings(BaseSettings):
 
     minio_endpoint: str = "localhost:9000"
     minio_access_key: str = "vulnconsole"
-    minio_secret_key: str = "change-me-minio"
+    minio_secret_key: str = "change-me-minio"  # noqa: S105 (dev default, overridden in prod)
     minio_secure: bool = False
     minio_bucket_artifacts: str = "scan-artifacts"
 
-    jwt_secret_key: str = "dev-only-secret-change-me"
+    jwt_secret_key: str = "dev-only-secret-change-me"  # noqa: S105 (dev default, overridden in prod)
     jwt_algorithm: str = "HS256"
     jwt_access_token_minutes: int = 15
     jwt_refresh_token_days: int = 7

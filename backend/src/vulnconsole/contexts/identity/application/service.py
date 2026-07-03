@@ -14,7 +14,7 @@ from vulnconsole.contexts.identity.domain.roles import ROLES
 from vulnconsole.shared.problems import ProblemError
 from vulnconsole.shared.security import hash_password, verify_password
 
-API_TOKEN_PREFIX = "vc_"
+API_TOKEN_PREFIX = "vc_"  # noqa: S105 (public token-format marker, not a credential)
 
 
 def record_audit(

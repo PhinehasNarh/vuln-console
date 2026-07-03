@@ -1,6 +1,7 @@
 """Authenticated principal resolution and permission enforcement."""
 
 import uuid
+from collections.abc import Awaitable, Callable
 from typing import Annotated, Literal
 
 from fastapi import Depends, Request
@@ -74,7 +75,7 @@ async def get_current_principal(
     )
 
 
-def require_permission(permission: str):  # noqa: ANN201 (returns a FastAPI dependency)
+def require_permission(permission: str) -> Callable[..., Awaitable["Principal"]]:
     async def dependency(
         principal: Annotated[Principal, Depends(get_current_principal)],
         request: Request,

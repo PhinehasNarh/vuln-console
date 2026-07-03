@@ -15,7 +15,11 @@ from vulnconsole.contexts.normalization.application.schemas import (
     FindingOut,
     FindingSourceOut,
 )
-from vulnconsole.contexts.normalization.domain.models import FINDING_STATUSES, Finding, FindingSource
+from vulnconsole.contexts.normalization.domain.models import (
+    FINDING_STATUSES,
+    Finding,
+    FindingSource,
+)
 from vulnconsole.shared.db import get_db_session
 from vulnconsole.shared.pagination import (
     DEFAULT_LIMIT,

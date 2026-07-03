@@ -31,7 +31,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "ruff>=0.6",
+  # Pinned so local, Docker, and CI lint identically (rule sets shift between
+  # ruff releases). Bump deliberately, not implicitly.
+  "ruff==0.15.20",
   "mypy>=1.11",
   "pytest>=8.3",
   "pytest-asyncio>=0.24",
@@ -53,6 +55,12 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "S", "C4", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests assert and use throwaway credentials by nature.
+"tests/**" = ["S101", "S105", "S106"]
+# SQLAlchemy declarative attributes (__table_args__) are class-level by API design.
+"**/domain/models.py" = ["RUF012"]
 
 [tool.mypy]
 python_version = "3.12"

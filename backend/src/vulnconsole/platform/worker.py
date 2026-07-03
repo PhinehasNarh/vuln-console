@@ -1,6 +1,7 @@
 """Worker composition root: NATS consumers driving the finding pipeline."""
 
 import asyncio
+import contextlib
 import json
 import signal
 import uuid
@@ -88,10 +89,9 @@ async def main() -> None:
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
-        try:
+        # add_signal_handler is not implemented on the Windows event loop.
+        with contextlib.suppress(NotImplementedError):
             loop.add_signal_handler(sig, stop.set)
-        except NotImplementedError:  # Windows event loop
-            pass
     await stop.wait()
     await bus.close()
     logger.info("worker.stopped")
