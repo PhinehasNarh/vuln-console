@@ -235,7 +235,9 @@ services:
       # discovery (flaky on Docker Desktop). Traefik still routes in prod.
       - "127.0.0.1:8080:8080"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO /dev/null http://localhost:8080/"]
+      # 127.0.0.1, not localhost: nginx listens on IPv4 only, and localhost
+      # resolves to ::1 inside the container.
+      test: ["CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:8080/"]
       interval: 15s
       timeout: 5s
       retries: 5
