@@ -45,7 +45,19 @@ Run the API against the compose infra (postgres, redis, nats, minio up):
 
 Configuration comes from environment variables or a `.env` file (see `backend/src/vulnconsole/shared/config.py` for every setting and its default). Integration tests: `INTEGRATION=1 pytest tests/integration -q` (see docs/next-session.md for the env vars).
 
-On this dev machine specifically: ruff and mypy cannot execute locally (App Control); use `python -m pyflakes src/vulnconsole tests` and rely on CI for ruff/mypy.
+On this dev machine specifically: ruff and mypy native binaries cannot execute directly (App Control blocks unsigned executables). Two local options that both work:
+
+- Quick: `./.venv/Scripts/python.exe -m pyflakes src/vulnconsole tests`.
+- Ground truth, identical to CI (pinned versions): run the linters in Docker.
+
+```bash
+# from backend/, with Docker running
+docker run --rm -v "$(pwd):/io" -w /io ghcr.io/astral-sh/ruff:0.15.20 check .
+docker run --rm -v "$(pwd):/io" -w /io python:3.12-slim \
+  bash -c "pip install -e '.[dev]' -q && mypy src/vulnconsole"
+```
+
+Ruff and mypy are pinned in `pyproject.toml` so Docker and CI agree exactly; bump them deliberately.
 
 ## Frontend loop
 

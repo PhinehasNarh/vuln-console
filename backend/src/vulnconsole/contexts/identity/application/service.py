@@ -39,7 +39,8 @@ def record_audit(
 
 
 async def get_user_by_username(session: AsyncSession, username: str) -> User | None:
-    return await session.scalar(select(User).where(User.username == username))
+    result: User | None = await session.scalar(select(User).where(User.username == username))
+    return result
 
 
 async def get_user_by_id(session: AsyncSession, user_id: uuid.UUID) -> User | None:

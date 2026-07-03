@@ -12,7 +12,7 @@ Written 2026-07-02. Everything below is code-complete and unit-tested; the live 
 
 ## Machine quirks discovered (do not rediscover these)
 
-1. **Windows App Control blocks unsigned native binaries** in the venv: `ruff.exe` and mypy's compiled core cannot run locally. They run in CI on Linux instead. Local fallback: `python -m pyflakes`.
+1. **Windows App Control blocks unsigned native binaries** in the venv: `ruff.exe`, mypy's compiled core, and console-script `.exe` shims cannot run directly. Run ruff and mypy via Docker for local ground truth (commands in the developer guide), or `python -m pyflakes` for a quick pass; import-linter runs via `python -c "from importlinter.cli import lint_imports_command; lint_imports_command()"`.
 2. **The `&` in the `L&D` folder name breaks `npm run` / `npx`** (cmd.exe parses it). Invoke tools directly instead:
    `node node_modules/typescript/bin/tsc --noEmit` and `node node_modules/vite/bin/vite.js build`.
 3. Docker Desktop must be started manually before compose commands.
@@ -99,7 +99,7 @@ docker compose -f deploy/compose/docker-compose.yml logs worker | tail -30
 
 ## Step 7: push-triggered CI
 
-CI on GitHub runs: typography (dash ban), compose config validation, ruff, backend unit tests, frontend typecheck + build, and an advisory mypy job (mypy cannot run on this machine, see quirks). Confirm all green on the repo's Actions tab.
+CI on GitHub runs: typography (dash ban), compose config validation, ruff (pinned 0.15.20), import-linter boundary contracts, mypy strict (pinned 2.1.0), backend unit tests, and frontend typecheck + build. All blocking. Confirm green on the repo's Actions tab. Locally, ruff and mypy run via Docker (see the developer guide) since App Control blocks their native binaries.
 
 ## If something fails
 

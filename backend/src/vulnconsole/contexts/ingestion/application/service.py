@@ -15,14 +15,23 @@ from vulnconsole.contexts.ingestion.connectors.base import (
     sniff_format,
     supported_formats,
 )
+
+# Status constants are re-exported so other contexts read scan status through
+# ingestion's application layer, never its domain (ADR-0002). The redundant
+# aliases mark these as an intentional public re-export.
 from vulnconsole.contexts.ingestion.domain.models import (
-    SCAN_STATUS_FAILED,
-    SCAN_STATUS_NORMALIZED,
-    SCAN_STATUS_PARSED,
-    SCAN_STATUS_RECEIVED,
-    RawFinding,
-    Scan,
+    SCAN_STATUS_FAILED as SCAN_STATUS_FAILED,
 )
+from vulnconsole.contexts.ingestion.domain.models import (
+    SCAN_STATUS_NORMALIZED as SCAN_STATUS_NORMALIZED,
+)
+from vulnconsole.contexts.ingestion.domain.models import (
+    SCAN_STATUS_PARSED as SCAN_STATUS_PARSED,
+)
+from vulnconsole.contexts.ingestion.domain.models import (
+    SCAN_STATUS_RECEIVED as SCAN_STATUS_RECEIVED,
+)
+from vulnconsole.contexts.ingestion.domain.models import RawFinding, Scan
 from vulnconsole.contexts.ingestion.infrastructure import artifacts
 from vulnconsole.shared.config import get_settings
 from vulnconsole.shared.events import (

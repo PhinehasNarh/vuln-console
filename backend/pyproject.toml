@@ -31,10 +31,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  # Pinned so local, Docker, and CI lint identically (rule sets shift between
-  # ruff releases). Bump deliberately, not implicitly.
+  # Pinned so local, Docker, and CI lint and type-check identically (rule sets
+  # shift between releases). Bump deliberately, not implicitly.
   "ruff==0.15.20",
-  "mypy>=1.11",
+  "mypy==2.1.0",
   "pytest>=8.3",
   "pytest-asyncio>=0.24",
   "pytest-cov>=5.0",
