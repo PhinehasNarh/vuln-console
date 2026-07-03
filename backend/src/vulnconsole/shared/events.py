@@ -27,6 +27,8 @@ SCAN_PARSED = "ingestion.scan.parsed"
 SCAN_FAILED = "ingestion.scan.failed"
 FINDING_CREATED = "normalization.finding.created"
 FINDING_UPDATED = "normalization.finding.updated"
+FINDING_ASSIGNED = "triage.finding.assigned"
+SLA_BREACHED = "risk.sla.breached"
 
 STREAMS: tuple[StreamConfig, ...] = (
     StreamConfig(name="INGESTION", subjects=["ingestion.>"], max_age=7 * DAY_SECONDS),

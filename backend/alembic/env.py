@@ -11,13 +11,19 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from vulnconsole.contexts.identity.domain import models as identity_models
 from vulnconsole.contexts.ingestion.domain import models as ingestion_models
 from vulnconsole.contexts.normalization.domain import models as normalization_models
+from vulnconsole.contexts.notifications.domain import models as notifications_models
 from vulnconsole.shared.config import get_settings
 from vulnconsole.shared.db import Base
 
 # Importing the model modules registers every table on Base.metadata so that
 # migrations and autogenerate see the full schema. Referenced here so the
 # imports are not flagged as unused.
-_REGISTERED_MODELS = (identity_models, ingestion_models, normalization_models)
+_REGISTERED_MODELS = (
+    identity_models,
+    ingestion_models,
+    normalization_models,
+    notifications_models,
+)
 
 config = context.config
 if config.config_file_name is not None:

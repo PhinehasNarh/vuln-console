@@ -1,7 +1,7 @@
 """Findings endpoints: the canonical, deduplicated view."""
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -9,8 +9,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from vulnconsole.contexts.identity.api.deps import Principal, require_permission
-from vulnconsole.contexts.identity.application.permissions import FINDINGS_READ
+from vulnconsole.contexts.identity.application.permissions import FINDINGS_READ, FINDINGS_WRITE
+from vulnconsole.contexts.normalization.application import service
 from vulnconsole.contexts.normalization.application.schemas import (
+    AssignRequest,
     FindingDetailOut,
     FindingOut,
     FindingSourceOut,
@@ -20,7 +22,10 @@ from vulnconsole.contexts.normalization.domain.models import (
     Finding,
     FindingSource,
 )
+from vulnconsole.contexts.normalization.domain.sla import OPEN_STATUSES
 from vulnconsole.shared.db import get_db_session
+from vulnconsole.shared.deps import get_event_bus
+from vulnconsole.shared.events import EventBus
 from vulnconsole.shared.pagination import (
     DEFAULT_LIMIT,
     Page,
@@ -61,6 +66,8 @@ async def list_findings(
     finding_class: str | None = None,
     tool: str | None = None,
     cve: str | None = None,
+    owner: str | None = None,
+    overdue: bool = False,
     limit: int = DEFAULT_LIMIT,
     cursor: str | None = None,
 ) -> Page[FindingOut]:
@@ -81,6 +88,14 @@ async def list_findings(
         query = query.where(Finding.tool_names.contains([tool.lower()]))
     if cve:
         query = query.where(Finding.cve_id == cve.strip().upper())
+    if owner:
+        query = query.where(Finding.owner == owner)
+    if overdue:
+        query = query.where(
+            Finding.sla_due_at.is_not(None),
+            Finding.sla_due_at < datetime.now(UTC),
+            Finding.status.in_(tuple(OPEN_STATUSES)),
+        )
     if cursor:
         position = decode_cursor(cursor)
         first_seen = datetime.fromisoformat(str(position["f"]))
@@ -99,7 +114,7 @@ async def list_findings(
         else None
     )
     return Page(
-        data=[FindingOut.model_validate(row) for row in rows],
+        data=[FindingOut.from_finding(row) for row in rows],
         pagination=PageMeta(next_cursor=next_cursor, has_more=has_more, limit=limit),
     )
 
@@ -121,7 +136,22 @@ async def get_finding(
         .order_by(FindingSource.created_at)
     )
     detail = FindingDetailOut(
-        **FindingOut.model_validate(finding).model_dump(),
+        **FindingOut.from_finding(finding).model_dump(),
         sources=[FindingSourceOut.model_validate(source) for source in sources],
     )
     return detail
+
+
+@router.put("/findings/{finding_id}/assignment", response_model=FindingOut)
+async def assign_finding(
+    finding_id: uuid.UUID,
+    body: AssignRequest,
+    principal: Annotated[Principal, Depends(require_permission(FINDINGS_WRITE))],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    bus: Annotated[EventBus, Depends(get_event_bus)],
+) -> FindingOut:
+    owner = body.owner.strip() if body.owner else None
+    finding = await service.assign_finding(
+        session, bus, finding_id=finding_id, owner=owner or None, actor=principal.actor
+    )
+    return FindingOut.from_finding(finding)

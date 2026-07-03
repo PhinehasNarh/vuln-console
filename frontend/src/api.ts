@@ -22,6 +22,10 @@ export interface Finding {
   cve_id: string | null;
   fixed_version: string | null;
   tool_names: string[];
+  owner: string | null;
+  assigned_at: string | null;
+  sla_due_at: string | null;
+  sla_status: "on_track" | "due_soon" | "overdue" | "none";
   first_seen: string;
   last_seen: string;
 }
@@ -98,6 +102,14 @@ export function listFindings(params: URLSearchParams): Promise<Page<Finding>> {
 
 export function getFinding(id: string): Promise<FindingDetail> {
   return apiFetch<FindingDetail>(`/findings/${id}`);
+}
+
+export function assignFinding(id: string, owner: string | null): Promise<Finding> {
+  return apiFetch<Finding>(`/findings/${id}/assignment`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ owner }),
+  });
 }
 
 export function uploadScan(file: File, repository: string): Promise<Scan> {

@@ -4,6 +4,19 @@
 
 name: vulnconsole
 
+# Notification channel settings shared by the api and worker. All optional:
+# unset channels are simply skipped and notifications still record to the DB.
+x-notify-env: &notify-env
+  SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+  TEAMS_WEBHOOK_URL: ${TEAMS_WEBHOOK_URL:-}
+  SMTP_HOST: ${SMTP_HOST:-}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_USERNAME: ${SMTP_USERNAME:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_FROM: ${SMTP_FROM:-vulnconsole@localhost}
+  NOTIFY_EMAIL_TO: ${NOTIFY_EMAIL_TO:-}
+  NOTIFICATIONS_BASE_URL: ${NOTIFICATIONS_BASE_URL:-http://localhost:8080}
+
 networks:
   edge:
   internal:
@@ -175,6 +188,7 @@ services:
     networks: [edge, internal]
     command: ["api"]
     environment:
+      <<: *notify-env
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vulnconsole}:${POSTGRES_PASSWORD:-change-me-postgres}@postgres:5432/${POSTGRES_DB:-vulnconsole}
       REDIS_URL: redis://:${REDIS_PASSWORD:-change-me-redis}@redis:6379/0
       NATS_URL: nats://nats:4222
@@ -217,6 +231,7 @@ services:
     networks: [internal]
     command: ["worker"]
     environment:
+      <<: *notify-env
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-vulnconsole}:${POSTGRES_PASSWORD:-change-me-postgres}@postgres:5432/${POSTGRES_DB:-vulnconsole}
       NATS_URL: nats://nats:4222
       MINIO_ENDPOINT: minio:9000

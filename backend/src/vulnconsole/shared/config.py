@@ -32,6 +32,27 @@ class Settings(BaseSettings):
     max_upload_bytes: int = 50 * 1024 * 1024
     login_rate_limit_per_minute: int = 10
 
+    # SLA: days to remediate per severity (info has no SLA). Comma-free by design.
+    sla_days_critical: int = 3
+    sla_days_high: int = 7
+    sla_days_medium: int = 30
+    sla_days_low: int = 90
+    # How often the worker scans for newly breached SLAs.
+    sla_scan_interval_seconds: int = 60
+
+    # Notification channels. Any that are configured are used; if none are set,
+    # notifications are still recorded to the database and structured log.
+    slack_webhook_url: str = ""
+    teams_webhook_url: str = ""
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = True
+    smtp_from: str = "vulnconsole@localhost"
+    notify_email_to: str = ""
+    notifications_base_url: str = "http://localhost:8080"
+
 
 @lru_cache
 def get_settings() -> Settings:

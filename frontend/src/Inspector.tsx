@@ -1,6 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
-import { getFinding } from "./api";
+import { assignFinding, getFinding } from "./api";
 import { SeverityChip } from "./FindingsTable";
 
 const timeFormat = new Intl.DateTimeFormat(undefined, {
@@ -11,12 +12,33 @@ const timeFormat = new Intl.DateTimeFormat(undefined, {
   minute: "2-digit",
 });
 
+const SLA_LABEL: Record<string, string> = {
+  overdue: "overdue",
+  due_soon: "due soon",
+  on_track: "on track",
+  none: "no SLA",
+};
+
 export function Inspector({ findingId, onClose }: { findingId: string; onClose: () => void }) {
+  const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: ["finding", findingId],
     queryFn: () => getFinding(findingId),
   });
   const finding = query.data;
+
+  const [ownerDraft, setOwnerDraft] = useState("");
+  useEffect(() => {
+    setOwnerDraft(finding?.owner ?? "");
+  }, [finding?.owner, findingId]);
+
+  const assign = useMutation({
+    mutationFn: (owner: string | null) => assignFinding(findingId, owner),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["finding", findingId] });
+      void queryClient.invalidateQueries({ queryKey: ["findings"] });
+    },
+  });
 
   return (
     <aside className="inspector" aria-label="Finding details">
@@ -43,6 +65,24 @@ export function Inspector({ findingId, onClose }: { findingId: string; onClose: 
           <dl className="meta-grid">
             <dt>status</dt>
             <dd>{finding.status}</dd>
+            <dt>owner</dt>
+            <dd>{finding.owner ?? "unassigned"}</dd>
+            {finding.sla_status !== "none" && (
+              <>
+                <dt>sla</dt>
+                <dd>
+                  <span className={`chip sla-${finding.sla_status}`}>
+                    {SLA_LABEL[finding.sla_status]}
+                  </span>
+                  {finding.sla_due_at && (
+                    <span className="muted nums sla-due">
+                      {" "}
+                      due {timeFormat.format(new Date(finding.sla_due_at))}
+                    </span>
+                  )}
+                </dd>
+              </>
+            )}
             <dt>repository</dt>
             <dd>{finding.repository}</dd>
             <dt>rule</dt>
@@ -83,6 +123,39 @@ export function Inspector({ findingId, onClose }: { findingId: string; onClose: 
               {finding.fingerprint.slice(0, 16)}...
             </dd>
           </dl>
+
+          <section className="inspector-section">
+            <h3>assign owner</h3>
+            <p className="muted small-text">
+              The engineer responsible for the fix. Assigning notifies your configured channels.
+            </p>
+            <div className="assign-row">
+              <input
+                value={ownerDraft}
+                placeholder="username or email"
+                onChange={(event) => setOwnerDraft(event.target.value)}
+                aria-label="Owner"
+              />
+              <button
+                className="primary small"
+                disabled={assign.isPending || !ownerDraft.trim()}
+                onClick={() => assign.mutate(ownerDraft.trim())}
+              >
+                {assign.isPending ? "saving" : "assign"}
+              </button>
+              {finding.owner && (
+                <button
+                  className="ghost small"
+                  disabled={assign.isPending}
+                  onClick={() => assign.mutate(null)}
+                >
+                  clear
+                </button>
+              )}
+            </div>
+            {assign.isError && <p className="error">{(assign.error as Error).message}</p>}
+          </section>
+
           <section className="inspector-section">
             <h3>source scans</h3>
             <p className="muted small-text">

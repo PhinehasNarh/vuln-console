@@ -401,6 +401,40 @@ table.findings tbody tr.selected {
   background: var(--sev-info-bg);
 }
 
+.sla-overdue {
+  color: var(--sev-critical-fg);
+  background: var(--sev-critical-bg);
+}
+
+.sla-due_soon {
+  color: var(--sev-high-fg);
+  background: var(--sev-high-bg);
+}
+
+.sla-on_track {
+  color: var(--sev-low-fg);
+  background: var(--sev-low-bg);
+}
+
+.sla-due {
+  font-size: 0.78rem;
+}
+
+.owner-tag {
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.assign-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.assign-row input {
+  flex: 1;
+}
+
 /* ---- inspector ---- */
 
 .inspector {

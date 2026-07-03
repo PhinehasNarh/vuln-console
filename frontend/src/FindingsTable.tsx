@@ -35,7 +35,7 @@ export function FindingsTable({ rows, loading, error, selectedId, onSelect }: Fi
           <tbody>
             {Array.from({ length: 8 }, (_, index) => (
               <tr key={index} className="skeleton-row">
-                {Array.from({ length: 6 }, (_, cell) => (
+                {Array.from({ length: 7 }, (_, cell) => (
                   <td key={cell}>
                     <span className="skeleton" />
                   </td>
@@ -80,7 +80,22 @@ export function FindingsTable({ rows, loading, error, selectedId, onSelect }: Fi
                   `${finding.file_path ?? "-"}${finding.line !== null ? `:${finding.line}` : ""}`}
               </td>
               <td className="muted">{finding.tool_names.join(", ")}</td>
-              <td className="muted nums">{timeFormat.format(new Date(finding.last_seen))}</td>
+              <td>
+                {finding.owner ? (
+                  <span className="owner-tag">{finding.owner}</span>
+                ) : (
+                  <span className="muted">unassigned</span>
+                )}
+              </td>
+              <td>
+                {finding.sla_status === "overdue" && <span className="chip sla-overdue">overdue</span>}
+                {finding.sla_status === "due_soon" && (
+                  <span className="chip sla-due_soon">due soon</span>
+                )}
+                {(finding.sla_status === "on_track" || finding.sla_status === "none") && (
+                  <span className="muted nums">{timeFormat.format(new Date(finding.last_seen))}</span>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -98,7 +113,8 @@ function TableHead() {
         <th scope="col">repository</th>
         <th scope="col">location</th>
         <th scope="col">tools</th>
-        <th scope="col">last seen</th>
+        <th scope="col">owner</th>
+        <th scope="col">sla / last seen</th>
       </tr>
     </thead>
   );

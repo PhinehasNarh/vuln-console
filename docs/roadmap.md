@@ -45,17 +45,23 @@ Milestones are vertical slices: each one ships working, tested, documented capab
 
 **Acceptance criteria**: findings carry EPSS/KEV within one sync cycle; risk ordering demonstrably differs from raw CVSS ordering; SLA breach emits an event.
 
+**Shipped early**: SLA policy (severity to due-date), `sla_due_at` on findings with derived `sla_status`, and the `risk.sla.breached` event emitted by a periodic worker loop. Enrichment (EPSS/KEV) and composite scoring remain.
+
 ## M4: Triage workflows and dashboards
 
 **Scope**: full lifecycle transitions with justification; false positive, risk acceptance, and exception workflows with mandatory expiry and automatic reopen; ownership mapping; full RBAC matrix; security engineer dashboard (KEV exposure, aging, MTTR, backlog); immutable audit storage.
 
 **Acceptance criteria**: expiry reopens findings without human action; every workflow action requires and records justification; dashboard numbers reconcile with API queries.
 
+**Shipped early**: ownership assignment (`PUT /api/v1/findings/{id}/assignment`) with audit trail and the `triage.finding.assigned` event; overdue filter and owner filter on the findings API. Full lifecycle transitions, exceptions, and dashboards remain.
+
 ## M5: Automation and integrations
 
 **Scope**: webhook ingestion (GitHub/GitLab security events); Jira + GitHub Issues ticket creation with backlinks; Slack/Teams/email notifications with routing rules; scheduled scan orchestration hooks; notification preferences.
 
 **Acceptance criteria**: SLA breach opens a ticket and posts to Slack within one minute; ticket state syncs back to finding.
+
+**Shipped early**: notifications context with Slack, Microsoft Teams, and email providers behind a `Notifier` protocol; a dispatch service that fans out to every configured channel, records each attempt in the `notifications` table, and falls back to an auditable log record when no channel is configured; worker consumers fire on `triage.finding.assigned` and `risk.sla.breached`. Ticketing (Jira/GitHub Issues), webhook ingestion, and routing rules remain.
 
 ## M6: AI layer
 

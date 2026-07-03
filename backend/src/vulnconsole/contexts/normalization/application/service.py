@@ -17,7 +17,20 @@ from vulnconsole.contexts.normalization.domain.fingerprint import (
     derive_identity,
 )
 from vulnconsole.contexts.normalization.domain.models import Finding, FindingSource
-from vulnconsole.shared.events import FINDING_CREATED, FINDING_UPDATED, EventBus, EventEnvelope
+from vulnconsole.contexts.normalization.domain.sla import (
+    OPEN_STATUSES,
+    compute_due_at,
+    is_open,
+)
+from vulnconsole.shared.events import (
+    FINDING_ASSIGNED,
+    FINDING_CREATED,
+    FINDING_UPDATED,
+    SLA_BREACHED,
+    EventBus,
+    EventEnvelope,
+)
+from vulnconsole.shared.problems import ProblemError
 
 logger = structlog.get_logger(__name__)
 
@@ -99,6 +112,7 @@ async def normalize_scan(session: AsyncSession, bus: EventBus, scan_id: uuid.UUI
                 tool_names=[tool],
                 first_seen=now,
                 last_seen=now,
+                sla_due_at=compute_due_at(now, raw.severity),
             )
             session.add(finding)
             await session.flush()
@@ -109,6 +123,9 @@ async def normalize_scan(session: AsyncSession, bus: EventBus, scan_id: uuid.UUI
             if _severity_rank(raw.severity) > _severity_rank(finding.severity):
                 finding.severity = raw.severity
                 finding.title = raw.title
+                # A worse severity tightens the SLA; recompute from first_seen.
+                finding.sla_due_at = compute_due_at(finding.first_seen, raw.severity)
+                finding.sla_breach_notified_at = None
             finding.line = raw.line if raw.line is not None else finding.line
             finding.package = package or finding.package
             finding.cve_id = vuln_id or finding.cve_id
@@ -145,3 +162,90 @@ async def normalize_scan(session: AsyncSession, bus: EventBus, scan_id: uuid.UUI
                 payload={"finding_id": str(finding_id)},
             )
         )
+
+
+async def get_finding(session: AsyncSession, finding_id: uuid.UUID) -> Finding | None:
+    return await session.get(Finding, finding_id)
+
+
+async def assign_finding(
+    session: AsyncSession,
+    bus: EventBus,
+    *,
+    finding_id: uuid.UUID,
+    owner: str | None,
+    actor: str,
+) -> Finding:
+    """Set (or clear, when owner is None) the engineer responsible for a finding."""
+    from vulnconsole.contexts.identity.application.service import record_audit
+
+    finding = await session.get(Finding, finding_id)
+    if finding is None:
+        raise ProblemError(
+            status=404, title="Not found", detail="Finding not found", slug="not-found"
+        )
+    previous = finding.owner
+    finding.owner = owner
+    finding.assigned_at = datetime.now(UTC) if owner else None
+    record_audit(
+        session,
+        actor=actor,
+        action="finding.assigned" if owner else "finding.unassigned",
+        entity_type="finding",
+        entity_id=str(finding.id),
+        detail={"from": previous, "to": owner},
+    )
+    await session.commit()
+
+    if owner:
+        await bus.publish(
+            EventEnvelope(
+                subject=FINDING_ASSIGNED,
+                actor=actor,
+                correlation_id=str(finding.id),
+                payload={"finding_id": str(finding.id), "owner": owner, "previous": previous},
+            )
+        )
+    return finding
+
+
+async def scan_sla_breaches(session: AsyncSession, bus: EventBus) -> int:
+    """Emit risk.sla.breached for open findings past due that have not fired yet.
+
+    Idempotent: sla_breach_notified_at is stamped so each breach fires once.
+    Returns the number of new breaches emitted.
+    """
+    now = datetime.now(UTC)
+    overdue = await session.scalars(
+        select(Finding).where(
+            Finding.sla_due_at.is_not(None),
+            Finding.sla_due_at < now,
+            Finding.sla_breach_notified_at.is_(None),
+            Finding.status.in_(tuple(OPEN_STATUSES)),
+        )
+    )
+    breached = list(overdue)
+    for finding in breached:
+        finding.sla_breach_notified_at = now
+    if breached:
+        await session.commit()
+    for finding in breached:
+        await bus.publish(
+            EventEnvelope(
+                subject=SLA_BREACHED,
+                correlation_id=str(finding.id),
+                payload={
+                    "finding_id": str(finding.id),
+                    "severity": finding.severity,
+                    "owner": finding.owner,
+                    "due_at": finding.sla_due_at.isoformat() if finding.sla_due_at else None,
+                },
+            )
+        )
+    if breached:
+        logger.info("sla.breaches_emitted", count=len(breached))
+    return len(breached)
+
+
+def finding_is_open(status: str) -> bool:
+    return is_open(status)

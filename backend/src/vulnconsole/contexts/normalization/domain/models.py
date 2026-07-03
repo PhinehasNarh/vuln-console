@@ -46,6 +46,10 @@ class Finding(Base):
     cve_id: Mapped[str | None] = mapped_column(String(40), index=True)
     fixed_version: Mapped[str | None] = mapped_column(String(100))
     tool_names: Mapped[list[Any]] = mapped_column(JSONB, default=list)
+    owner: Mapped[str | None] = mapped_column(String(120), index=True)
+    assigned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    sla_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    sla_breach_notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
