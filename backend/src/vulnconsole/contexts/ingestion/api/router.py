@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from vulnconsole.contexts.identity.api.deps import Principal, require_permission
-from vulnconsole.contexts.identity.domain.roles import SCANS_INGEST, SCANS_READ
+from vulnconsole.contexts.identity.application.permissions import SCANS_INGEST, SCANS_READ
 from vulnconsole.contexts.ingestion.application import service
 from vulnconsole.contexts.ingestion.application.schemas import ScanOut
 from vulnconsole.contexts.ingestion.domain.models import Scan

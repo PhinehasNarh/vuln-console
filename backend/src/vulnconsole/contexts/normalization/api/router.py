@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from vulnconsole.contexts.identity.api.deps import Principal, require_permission
-from vulnconsole.contexts.identity.domain.roles import FINDINGS_READ
+from vulnconsole.contexts.identity.application.permissions import FINDINGS_READ
 from vulnconsole.contexts.normalization.application.schemas import (
     FindingDetailOut,
     FindingOut,

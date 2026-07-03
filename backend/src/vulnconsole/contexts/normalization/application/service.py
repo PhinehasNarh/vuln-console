@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from vulnconsole.contexts.ingestion.application import service as ingestion_service
-from vulnconsole.contexts.ingestion.domain.models import (
+from vulnconsole.contexts.ingestion.application.service import (
     SCAN_STATUS_NORMALIZED,
     SCAN_STATUS_PARSED,
 )

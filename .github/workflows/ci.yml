@@ -46,6 +46,8 @@ jobs:
         run: pip install -e '.[dev]'
       - name: Ruff
         run: ruff check .
+      - name: Context boundaries (import-linter)
+        run: lint-imports
       - name: Unit tests
         run: pytest tests/unit -q
 

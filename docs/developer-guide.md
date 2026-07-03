@@ -20,7 +20,7 @@ docs/              everything else you are reading
 
 ## Golden rules
 
-1. **Context boundaries**: a context never imports another context's `domain` or `infrastructure`. Cross-context calls go through the other context's `application` service or NATS events. (import-linter contract planned; until then, reviews enforce it.)
+1. **Context boundaries**: a context never imports another context's `domain` or `infrastructure`. Cross-context calls go through the other context's `application` service or NATS events. Enforced by import-linter contracts in `pyproject.toml`; CI runs `lint-imports`, and on this machine run `./.venv/Scripts/python.exe -c "from importlinter.cli import lint_imports_command; lint_imports_command()"` (the console-script exe is App Control blocked).
 2. **Raw is sacred**: scanner output is stored verbatim as RawFinding; all triage state hangs off the canonical Finding (ADR-0007).
 3. **Every mutation writes an AuditEvent** in the same transaction.
 4. **Problem details everywhere**: raise `ProblemError` (shared/problems.py); never return ad-hoc error JSON.

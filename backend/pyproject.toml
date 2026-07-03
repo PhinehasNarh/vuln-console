@@ -64,3 +64,53 @@ packages = ["vulnconsole"]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 addopts = "--strict-markers"
+
+# Context boundaries (ADR-0002): domain and infrastructure layers are private
+# to their context. Run with: lint-imports (or python -m importlinter.cli lint)
+[tool.importlinter]
+root_package = "vulnconsole"
+
+[[tool.importlinter.contracts]]
+name = "identity domain and infrastructure are private"
+type = "forbidden"
+source_modules = [
+  "vulnconsole.contexts.ingestion",
+  "vulnconsole.contexts.normalization",
+]
+allow_indirect_imports = true
+forbidden_modules = [
+  "vulnconsole.contexts.identity.domain",
+  "vulnconsole.contexts.identity.infrastructure",
+]
+
+[[tool.importlinter.contracts]]
+name = "ingestion domain and infrastructure are private"
+type = "forbidden"
+source_modules = [
+  "vulnconsole.contexts.identity",
+  "vulnconsole.contexts.normalization",
+]
+allow_indirect_imports = true
+forbidden_modules = [
+  "vulnconsole.contexts.ingestion.domain",
+  "vulnconsole.contexts.ingestion.infrastructure",
+]
+
+[[tool.importlinter.contracts]]
+name = "normalization domain and infrastructure are private"
+type = "forbidden"
+source_modules = [
+  "vulnconsole.contexts.identity",
+  "vulnconsole.contexts.ingestion",
+]
+allow_indirect_imports = true
+forbidden_modules = [
+  "vulnconsole.contexts.normalization.domain",
+  "vulnconsole.contexts.normalization.infrastructure",
+]
+
+[[tool.importlinter.contracts]]
+name = "shared kernel does not depend on contexts or platform"
+type = "forbidden"
+source_modules = ["vulnconsole.shared"]
+forbidden_modules = ["vulnconsole.contexts", "vulnconsole.platform"]
