@@ -9,6 +9,9 @@ across scanners:
 - secret: rule = the constant "secret", location = file path + hash of the
   secret value. Gitleaks and TruffleHog finding the same credential in the
   same file correlate regardless of their rule naming.
+- cloud: rule = the check id (e.g. s3_bucket_public_access), location = the
+  resource uid/ARN. The same failing control on the same cloud resource
+  correlates across re-scans, and (where check ids align) across CSPM tools.
 - sast / iac: rule = tool-namespaced rule id, location = file path.
   (Context hashing to survive line drift is a future fingerprint version.)
 
@@ -41,6 +44,10 @@ def derive_identity(
     if finding_class == "secret":
         secret_hash = hints.get("secret_hash", "")
         return "secret", f"{file_path or ''}|{secret_hash}"
+    if finding_class == "cloud":
+        # rule id is the check id; keep it un-namespaced so the same benchmark
+        # control correlates across CSPM tools. Location is the resource.
+        return rule_id, hints.get("resource_uid") or file_path or ""
     return f"{tool}:{rule_id}", file_path or ""
 
 

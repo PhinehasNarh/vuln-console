@@ -127,6 +127,7 @@ Identity per class (`derive_identity` in `normalization/domain/fingerprint.py`):
 
 - **sca / container**: rule = the vulnerability id (CVE/GHSA, uppercased), location = the versionless purl (fallback: package name, then path). Trivy and Grype reporting the same CVE in the same package produce the same fingerprint, and upgrading the package does not mint a new finding.
 - **secret**: rule = the constant `secret`, location = file path + sha256 of the secret value. Gitleaks and TruffleHog finding the same credential in the same file correlate regardless of rule naming; the same credential in two files stays two findings. Secret values are hashed and redacted inside the connector; plaintext never reaches storage.
+- **cloud**: rule = the check id (e.g. `s3_bucket_public_access`), location = the resource uid/ARN. Prowler findings for AWS and Azure land in one `cloud` view, and the same failing control on the same resource correlates across re-scans. PASS results are not ingested.
 - **sast / iac**: rule = tool-namespaced rule id, location = file path. Context hashing to survive line drift is a future fingerprint version.
 
 Connectors supply the class-specific inputs as `hints` on each raw finding (standard keys: `vuln_id`, `purl_base`, `package`, `installed_version`, `fixed_version`, `secret_hash`).

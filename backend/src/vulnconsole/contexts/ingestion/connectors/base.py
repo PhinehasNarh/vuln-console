@@ -5,7 +5,7 @@ from typing import Any, Literal, Protocol, runtime_checkable
 from pydantic import BaseModel, Field
 
 Severity = Literal["critical", "high", "medium", "low", "info"]
-FindingClass = Literal["sast", "sca", "secret", "iac", "container", "dast"]
+FindingClass = Literal["sast", "sca", "secret", "iac", "container", "dast", "cloud"]
 
 
 class RawFindingDraft(BaseModel):
@@ -73,6 +73,7 @@ _NAME_SEVERITY: dict[str, Severity] = {
     "negligible": "info",
     "unknown": "info",
     "info": "info",
+    "informational": "info",
 }
 
 

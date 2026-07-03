@@ -1,0 +1,128 @@
+[
+  {
+    "metadata": {
+      "event_code": "s3_bucket_public_access",
+      "product": { "name": "Prowler", "version": "4.6.0" }
+    },
+    "severity": "Critical",
+    "severity_id": 5,
+    "status_code": "FAIL",
+    "status_detail": "S3 Bucket acme-prod-assets is publicly accessible.",
+    "finding_info": {
+      "uid": "prowler-aws-s3_bucket_public_access-123456789012-us-east-1-acme-prod-assets",
+      "title": "Ensure S3 buckets are not publicly accessible",
+      "desc": "The S3 bucket allows public read access via its bucket policy."
+    },
+    "cloud": {
+      "provider": "aws",
+      "account": { "uid": "123456789012", "name": "acme-production" },
+      "region": "us-east-1"
+    },
+    "resources": [
+      {
+        "type": "AwsS3Bucket",
+        "uid": "arn:aws:s3:::acme-prod-assets",
+        "name": "acme-prod-assets",
+        "region": "us-east-1"
+      }
+    ],
+    "remediation": {
+      "desc": "Enable S3 Block Public Access at the bucket and account level.",
+      "references": [
+        "https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-control-block-public-access.html"
+      ]
+    }
+  },
+  {
+    "metadata": {
+      "event_code": "iam_root_hardware_mfa_enabled",
+      "product": { "name": "Prowler", "version": "4.6.0" }
+    },
+    "severity": "High",
+    "severity_id": 4,
+    "status_code": "FAIL",
+    "status_detail": "Hardware MFA is not enabled for the root account.",
+    "finding_info": {
+      "uid": "prowler-aws-iam_root_hardware_mfa_enabled-123456789012",
+      "title": "Ensure hardware MFA is enabled for the root account",
+      "desc": "The AWS root account does not have a hardware MFA device enabled."
+    },
+    "cloud": {
+      "provider": "aws",
+      "account": { "uid": "123456789012", "name": "acme-production" },
+      "region": "us-east-1"
+    },
+    "resources": [
+      {
+        "type": "AwsIamUser",
+        "uid": "arn:aws:iam::123456789012:root",
+        "name": "root",
+        "region": "global"
+      }
+    ],
+    "remediation": {
+      "desc": "Register a hardware MFA device for the root user and store it securely.",
+      "references": [
+        "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_mfa_enable_physical.html"
+      ]
+    }
+  },
+  {
+    "metadata": {
+      "event_code": "storage_blob_public_access_disabled",
+      "product": { "name": "Prowler", "version": "4.6.0" }
+    },
+    "severity": "High",
+    "severity_id": 4,
+    "status_code": "FAIL",
+    "status_detail": "Storage account acmeprodstorage allows public blob access.",
+    "finding_info": {
+      "uid": "prowler-azure-storage_blob_public_access-9f2c1e8a-storage",
+      "title": "Ensure that public access level is disabled for storage accounts with blob containers",
+      "desc": "The Azure storage account permits anonymous public read access to blobs."
+    },
+    "cloud": {
+      "provider": "azure",
+      "account": { "uid": "9f2c1e8a-4b3d-4a1f-8c2e-1234567890ab", "name": "acme-azure-prod" },
+      "region": "eastus"
+    },
+    "resources": [
+      {
+        "type": "AzureStorageAccount",
+        "uid": "/subscriptions/9f2c1e8a-4b3d-4a1f-8c2e-1234567890ab/resourceGroups/acme-prod/providers/Microsoft.Storage/storageAccounts/acmeprodstorage",
+        "name": "acmeprodstorage",
+        "region": "eastus"
+      }
+    ],
+    "remediation": {
+      "desc": "Set the storage account public access level to private and disable anonymous blob access.",
+      "references": [
+        "https://learn.microsoft.com/en-us/azure/storage/blobs/anonymous-read-access-configure"
+      ]
+    }
+  },
+  {
+    "metadata": {
+      "event_code": "ec2_ebs_default_encryption",
+      "product": { "name": "Prowler", "version": "4.6.0" }
+    },
+    "severity": "Medium",
+    "severity_id": 3,
+    "status_code": "PASS",
+    "status_detail": "EBS default encryption is enabled.",
+    "finding_info": {
+      "uid": "prowler-aws-ec2_ebs_default_encryption-123456789012-us-east-1",
+      "title": "Ensure EBS default encryption is enabled",
+      "desc": "EBS volumes are encrypted by default."
+    },
+    "cloud": {
+      "provider": "aws",
+      "account": { "uid": "123456789012", "name": "acme-production" },
+      "region": "us-east-1"
+    },
+    "resources": [
+      { "type": "AwsEc2", "uid": "arn:aws:ec2:us-east-1:123456789012:volume/default", "name": "default", "region": "us-east-1" }
+    ],
+    "remediation": { "desc": "", "references": [] }
+  }
+]

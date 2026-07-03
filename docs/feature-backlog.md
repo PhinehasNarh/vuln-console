@@ -5,6 +5,8 @@ Everything we could build next, grouped by theme. The committed sequence lives i
 ## Ingestion and coverage
 
 - Trivy, Grype, Gitleaks, TruffleHog connectors (M2: **shipped**, with secret redaction at parse time)
+- Prowler cloud posture connector, AWS + Azure + GCP, OCSF and native JSON (**shipped**; new `cloud` finding class, resource-scoped correlation, PASS filtered)
+- More cloud sources building on the `cloud` class: AWS Security Hub (ASFF), Azure Defender for Cloud export, generic OCSF
 - CycloneDX/Syft and SPDX SBOM import into the inventory context (M2, remaining)
 - Native connectors where richer than SARIF: CodeQL, Snyk, SonarQube, OWASP Dependency-Check
 - GitHub Security Alerts and GitLab Security Reports webhook ingestion (M5)
@@ -68,6 +70,8 @@ Everything we could build next, grouped by theme. The committed sequence lives i
 - Table virtualization for 100k+ findings, column customization, pinned columns
 - Public API tokens with fine-grained scopes and expiry
 - Multi-tenancy: isolated business units on one install
+
+
 
 ## How to promote an item
 
