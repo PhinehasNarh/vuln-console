@@ -94,6 +94,5 @@ docs/       Architecture, ADRs, API, security, roadmap
 
 ## Contributing conventions
 
-- Writing style: no em dashes or en dashes in any file (docs, comments, commit messages). CI enforces this.
 - Every feature ships with architecture notes, tests, and documentation.
 - ADRs record every significant decision; propose changes via a new ADR, not by editing accepted ones.
