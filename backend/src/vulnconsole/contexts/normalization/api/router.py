@@ -16,6 +16,7 @@ from vulnconsole.contexts.normalization.application.schemas import (
     FindingDetailOut,
     FindingOut,
     FindingSourceOut,
+    TransitionRequest,
 )
 from vulnconsole.contexts.normalization.domain.models import (
     FINDING_STATUSES,
@@ -23,6 +24,7 @@ from vulnconsole.contexts.normalization.domain.models import (
     FindingSource,
 )
 from vulnconsole.contexts.normalization.domain.sla import OPEN_STATUSES
+from vulnconsole.contexts.normalization.domain.triage import allowed_transitions
 from vulnconsole.shared.db import get_db_session
 from vulnconsole.shared.deps import get_event_bus
 from vulnconsole.shared.events import EventBus
@@ -138,8 +140,29 @@ async def get_finding(
     detail = FindingDetailOut(
         **FindingOut.from_finding(finding).model_dump(),
         sources=[FindingSourceOut.model_validate(source) for source in sources],
+        allowed_transitions=list(allowed_transitions(finding.status)),
     )
     return detail
+
+
+@router.post("/findings/{finding_id}/transition", response_model=FindingOut)
+async def transition_finding(
+    finding_id: uuid.UUID,
+    body: TransitionRequest,
+    principal: Annotated[Principal, Depends(require_permission(FINDINGS_WRITE))],
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    bus: Annotated[EventBus, Depends(get_event_bus)],
+) -> FindingOut:
+    finding = await service.change_status(
+        session,
+        bus,
+        finding_id=finding_id,
+        target=body.status,
+        reason=body.reason,
+        actor=principal.actor,
+        risk_accepted_until=body.risk_accepted_until,
+    )
+    return FindingOut.from_finding(finding)
 
 
 @router.put("/findings/{finding_id}/assignment", response_model=FindingOut)

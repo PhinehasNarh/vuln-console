@@ -24,6 +24,10 @@ export interface Finding {
   tool_names: string[];
   owner: string | null;
   assigned_at: string | null;
+  status_reason: string | null;
+  status_changed_at: string | null;
+  status_changed_by: string | null;
+  risk_accepted_until: string | null;
   sla_due_at: string | null;
   sla_status: "on_track" | "due_soon" | "overdue" | "none";
   first_seen: string;
@@ -94,6 +98,21 @@ export interface FindingSource {
 
 export interface FindingDetail extends Finding {
   sources: FindingSource[];
+  allowed_transitions: string[];
+}
+
+export interface TransitionInput {
+  status: string;
+  reason: string;
+  risk_accepted_until?: string | null;
+}
+
+export function transitionFinding(id: string, input: TransitionInput): Promise<Finding> {
+  return apiFetch<Finding>(`/findings/${id}/transition`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
 }
 
 export function listFindings(params: URLSearchParams): Promise<Page<Finding>> {

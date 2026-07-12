@@ -55,6 +55,23 @@ def build_assignment(finding: FindingRef) -> Message:
     )
 
 
+def build_status_change(finding: FindingRef, status: str, reason: str) -> Message:
+    emoji = SEVERITY_EMOJI.get(finding.severity, "")
+    pretty = status.replace("_", " ")
+    subject = f"Finding marked {pretty}: {finding.title}"
+    body = (
+        f"{emoji} A {finding.severity.upper()} finding in {finding.repository} "
+        f"was marked {pretty}.\nReason: {reason}\n\n{finding.title}"
+    )
+    return Message(
+        event="finding.status_changed",
+        subject=subject,
+        body=body,
+        finding_id=finding.id,
+        link=_link(finding.id),
+    )
+
+
 def build_sla_breach(finding: FindingRef, due_at: str | None) -> Message:
     emoji = SEVERITY_EMOJI.get(finding.severity, "")
     owner = finding.owner or "unassigned"

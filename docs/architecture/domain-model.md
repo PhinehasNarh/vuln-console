@@ -147,16 +147,16 @@ stateDiagram-v2
     Triaged --> FalsePositive : confirmed FP
     Triaged --> Suppressed : exception approved
     InRemediation --> Fixed : verified absent or patched
-    RiskAccepted --> Triaged : acceptance expired
-    Suppressed --> Triaged : exception expired
+    RiskAccepted --> Reopened : acceptance expired (auto)
     Fixed --> Reopened : regression detected in new scan
     Reopened --> Triaged
     FalsePositive --> [*]
     Fixed --> [*]
 ```
 
-Rules enforced by the Triage & Workflow context:
+Rules enforced by the state machine (implemented in `normalization/domain/triage.py`; the workflow lives on the Finding aggregate alongside its existing `status`):
 
-- Every transition writes an AuditEvent (who, when, from, to, justification).
-- RiskAccepted and Suppressed require an expiry date; expiry automatically returns the finding to Triaged and emits `triage.exception.expired`.
-- Fixed is asserted by absence in a newer scan of the same target plus scanner class, or by manual verification; either path is recorded as Evidence.
+- Legal transitions only: closed dispositions (fixed, risk_accepted, false_positive, suppressed) can go only to reopened; open states can move to any working disposition. Illegal moves are rejected with a problem+json 422.
+- Every transition requires a justification; it writes an AuditEvent (who, when, from, to, reason) and publishes `triage.finding.status_changed`. Notable dispositions (risk_accepted, false_positive, suppressed, reopened) notify configured channels.
+- Risk acceptance requires a future expiry; a periodic worker loop auto-reopens accepted findings once the expiry passes (actor `system:expiry`) and clears the SLA breach flag so the clock resumes.
+- Full exception entities (approval workflow, listing) and scan-absence-based auto-fix remain future work.

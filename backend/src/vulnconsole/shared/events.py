@@ -28,6 +28,7 @@ SCAN_FAILED = "ingestion.scan.failed"
 FINDING_CREATED = "normalization.finding.created"
 FINDING_UPDATED = "normalization.finding.updated"
 FINDING_ASSIGNED = "triage.finding.assigned"
+FINDING_STATUS_CHANGED = "triage.finding.status_changed"
 SLA_BREACHED = "risk.sla.breached"
 
 STREAMS: tuple[StreamConfig, ...] = (

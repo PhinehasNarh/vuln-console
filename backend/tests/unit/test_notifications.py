@@ -10,6 +10,7 @@ from vulnconsole.contexts.notifications.application.messages import (
     Message,
     build_assignment,
     build_sla_breach,
+    build_status_change,
 )
 from vulnconsole.contexts.notifications.infrastructure import providers
 from vulnconsole.contexts.notifications.infrastructure.providers import (
@@ -48,6 +49,13 @@ def test_breach_message_reports_due_and_owner() -> None:
     assert "SLA breached" in msg.subject
     assert "sana" in msg.body
     assert "2026-07-04" in msg.body
+
+
+def test_status_change_message_is_readable() -> None:
+    msg = build_status_change(REF, "risk_accepted", "Compensating WAF rule in place")
+    assert msg.event == "finding.status_changed"
+    assert "risk accepted" in msg.subject
+    assert "Compensating WAF rule in place" in msg.body
 
 
 # ---- provider enablement ----

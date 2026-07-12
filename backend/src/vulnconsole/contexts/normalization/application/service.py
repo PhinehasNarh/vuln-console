@@ -23,9 +23,15 @@ from vulnconsole.contexts.normalization.domain.sla import (
     compute_due_at,
     is_open,
 )
+from vulnconsole.contexts.normalization.domain.triage import (
+    is_allowed,
+    is_valid_status,
+    requires_expiry,
+)
 from vulnconsole.shared.events import (
     FINDING_ASSIGNED,
     FINDING_CREATED,
+    FINDING_STATUS_CHANGED,
     FINDING_UPDATED,
     SLA_BREACHED,
     EventBus,
@@ -221,6 +227,126 @@ async def assign_finding(
             )
         )
     return finding
+
+
+async def change_status(
+    session: AsyncSession,
+    bus: EventBus,
+    *,
+    finding_id: uuid.UUID,
+    target: str,
+    reason: str,
+    actor: str,
+    risk_accepted_until: datetime | None = None,
+    system: bool = False,
+) -> Finding:
+    """Transition a finding's lifecycle status with a mandatory justification."""
+    from vulnconsole.contexts.identity.application.service import record_audit
+
+    finding = await session.get(Finding, finding_id)
+    if finding is None:
+        raise ProblemError(
+            status=404, title="Not found", detail="Finding not found", slug="not-found"
+        )
+    reason = (reason or "").strip()
+    if not reason:
+        raise ProblemError(
+            status=422,
+            title="Justification required",
+            detail="A reason is required for every status change",
+            slug="reason-required",
+        )
+    if not is_valid_status(target):
+        raise ProblemError(
+            status=422,
+            title="Invalid status",
+            detail=f"Unknown status {target!r}",
+            slug="invalid-status",
+        )
+    if not is_allowed(finding.status, target):
+        raise ProblemError(
+            status=422,
+            title="Illegal transition",
+            detail=f"Cannot move a finding from {finding.status!r} to {target!r}",
+            slug="illegal-transition",
+        )
+    now = datetime.now(UTC)
+    if requires_expiry(target):
+        if risk_accepted_until is None:
+            raise ProblemError(
+                status=422,
+                title="Expiry required",
+                detail="Risk acceptance requires an expiry date",
+                slug="expiry-required",
+            )
+        if risk_accepted_until <= now:
+            raise ProblemError(
+                status=422,
+                title="Expiry in the past",
+                detail="The risk-acceptance expiry must be in the future",
+                slug="expiry-past",
+            )
+
+    previous = finding.status
+    finding.status = target
+    finding.status_reason = reason
+    finding.status_changed_at = now
+    finding.status_changed_by = actor
+    finding.risk_accepted_until = risk_accepted_until if target == "risk_accepted" else None
+    # Reopening puts the finding back under SLA pressure; let breaches fire again.
+    if target == "reopened":
+        finding.sla_breach_notified_at = None
+
+    record_audit(
+        session,
+        actor=actor,
+        action="finding.status_changed",
+        entity_type="finding",
+        entity_id=str(finding.id),
+        detail={"from": previous, "to": target, "reason": reason, "system": system},
+    )
+    await session.commit()
+
+    await bus.publish(
+        EventEnvelope(
+            subject=FINDING_STATUS_CHANGED,
+            actor=actor,
+            correlation_id=str(finding.id),
+            payload={
+                "finding_id": str(finding.id),
+                "from": previous,
+                "status": target,
+                "reason": reason,
+            },
+        )
+    )
+    return finding
+
+
+async def reopen_expired_acceptances(session: AsyncSession, bus: EventBus) -> int:
+    """Auto-reopen risk-accepted findings whose acceptance has expired."""
+    now = datetime.now(UTC)
+    expired = await session.scalars(
+        select(Finding).where(
+            Finding.status == "risk_accepted",
+            Finding.risk_accepted_until.is_not(None),
+            Finding.risk_accepted_until < now,
+        )
+    )
+    ids = [finding.id for finding in expired]
+    for finding_id in ids:
+        await change_status(
+            session,
+            bus,
+            finding_id=finding_id,
+            target="reopened",
+            reason="Risk acceptance expired",
+            actor="system:expiry",
+            system=True,
+        )
+    if ids:
+        logger.info("triage.acceptances_reopened", count=len(ids))
+    return len(ids)
 
 
 async def scan_sla_breaches(session: AsyncSession, bus: EventBus) -> int:

@@ -1,8 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-import { assignFinding, getFinding } from "./api";
+import { assignFinding, getFinding, transitionFinding } from "./api";
 import { SeverityChip } from "./FindingsTable";
+
+const STATUS_LABEL: Record<string, string> = {
+  new: "new",
+  triaged: "triaged",
+  in_remediation: "in remediation",
+  fixed: "fixed",
+  risk_accepted: "risk accepted",
+  false_positive: "false positive",
+  suppressed: "suppressed",
+  reopened: "reopened",
+};
 
 const timeFormat = new Intl.DateTimeFormat(undefined, {
   year: "numeric",
@@ -35,6 +46,32 @@ export function Inspector({ findingId, onClose }: { findingId: string; onClose: 
   const assign = useMutation({
     mutationFn: (owner: string | null) => assignFinding(findingId, owner),
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["finding", findingId] });
+      void queryClient.invalidateQueries({ queryKey: ["findings"] });
+    },
+  });
+
+  const [target, setTarget] = useState("");
+  const [reason, setReason] = useState("");
+  const [expiry, setExpiry] = useState("");
+  useEffect(() => {
+    setTarget("");
+    setReason("");
+    setExpiry("");
+  }, [findingId]);
+
+  const transition = useMutation({
+    mutationFn: () =>
+      transitionFinding(findingId, {
+        status: target,
+        reason: reason.trim(),
+        risk_accepted_until:
+          target === "risk_accepted" && expiry ? `${expiry}T23:59:59Z` : null,
+      }),
+    onSuccess: () => {
+      setTarget("");
+      setReason("");
+      setExpiry("");
       void queryClient.invalidateQueries({ queryKey: ["finding", findingId] });
       void queryClient.invalidateQueries({ queryKey: ["findings"] });
     },
@@ -154,6 +191,66 @@ export function Inspector({ findingId, onClose }: { findingId: string; onClose: 
               )}
             </div>
             {assign.isError && <p className="error">{(assign.error as Error).message}</p>}
+          </section>
+
+          <section className="inspector-section">
+            <h3>disposition</h3>
+            {finding.status_reason && (
+              <p className="muted small-text">
+                {STATUS_LABEL[finding.status] ?? finding.status} by{" "}
+                {finding.status_changed_by ?? "unknown"}: {finding.status_reason}
+                {finding.risk_accepted_until &&
+                  ` (expires ${new Date(finding.risk_accepted_until).toLocaleDateString()})`}
+              </p>
+            )}
+            {finding.allowed_transitions.length === 0 ? (
+              <p className="muted small-text">No transitions available from this state.</p>
+            ) : (
+              <div className="disposition">
+                <select value={target} onChange={(event) => setTarget(event.target.value)}>
+                  <option value="">change status to...</option>
+                  {finding.allowed_transitions.map((status) => (
+                    <option key={status} value={status}>
+                      {STATUS_LABEL[status] ?? status}
+                    </option>
+                  ))}
+                </select>
+                {target && (
+                  <>
+                    <textarea
+                      value={reason}
+                      placeholder="justification (required)"
+                      rows={2}
+                      onChange={(event) => setReason(event.target.value)}
+                    />
+                    {target === "risk_accepted" && (
+                      <label className="expiry-label">
+                        accept until
+                        <input
+                          type="date"
+                          value={expiry}
+                          onChange={(event) => setExpiry(event.target.value)}
+                        />
+                      </label>
+                    )}
+                    <button
+                      className="primary small"
+                      disabled={
+                        transition.isPending ||
+                        !reason.trim() ||
+                        (target === "risk_accepted" && !expiry)
+                      }
+                      onClick={() => transition.mutate()}
+                    >
+                      {transition.isPending ? "saving" : `mark ${STATUS_LABEL[target] ?? target}`}
+                    </button>
+                  </>
+                )}
+                {transition.isError && (
+                  <p className="error">{(transition.error as Error).message}</p>
+                )}
+              </div>
+            )}
           </section>
 
           <section className="inspector-section">

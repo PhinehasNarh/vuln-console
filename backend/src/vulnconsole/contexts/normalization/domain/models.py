@@ -48,6 +48,12 @@ class Finding(Base):
     tool_names: Mapped[list[Any]] = mapped_column(JSONB, default=list)
     owner: Mapped[str | None] = mapped_column(String(120), index=True)
     assigned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status_reason: Mapped[str | None] = mapped_column(Text)
+    status_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status_changed_by: Mapped[str | None] = mapped_column(String(120))
+    risk_accepted_until: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), index=True
+    )
     sla_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     sla_breach_notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)

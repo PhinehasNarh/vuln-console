@@ -37,7 +37,7 @@ Roles: `admin`, `security-engineer`, `developer`, `viewer`. CI systems should ne
 
 ## Notifications and SLA
 
-Findings get a remediation deadline by severity (critical 3 days, high 7, medium 30, low 90; info none), tunable with `SLA_DAYS_*` in `.env`. A worker loop scans for breaches every `SLA_SCAN_INTERVAL_SECONDS` (default 60) and each breach fires once.
+Findings get a remediation deadline by severity (critical 3 days, high 7, medium 30, low 90; info none), tunable with `SLA_DAYS_*` in `.env`. The same worker loop (every `SLA_SCAN_INTERVAL_SECONDS`, default 60) fires each SLA breach once and auto-reopens any risk acceptance whose expiry has passed. Findings move through their lifecycle via `POST /api/v1/findings/{id}/transition` (mark false positive, accept risk with expiry, mark fixed, reopen); every transition needs a justification and is written to the audit log.
 
 Notifications (on owner assignment and on SLA breach) go to every channel you configure; unset channels are skipped, and with none set the notification is still written to the `notifications.notifications` table for audit. Configure in `.env` (applied to both api and worker via the compose `notify-env` anchor):
 

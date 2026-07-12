@@ -27,6 +27,10 @@ class FindingOut(BaseModel):
     tool_names: list[str]
     owner: str | None
     assigned_at: datetime | None
+    status_reason: str | None
+    status_changed_at: datetime | None
+    status_changed_by: str | None
+    risk_accepted_until: datetime | None
     sla_due_at: datetime | None
     sla_status: str = "none"
     first_seen: datetime
@@ -44,6 +48,12 @@ class AssignRequest(BaseModel):
     owner: str | None = Field(default=None, max_length=120)
 
 
+class TransitionRequest(BaseModel):
+    status: str
+    reason: str = Field(min_length=1, max_length=2000)
+    risk_accepted_until: datetime | None = None
+
+
 class FindingSourceOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -54,3 +64,4 @@ class FindingSourceOut(BaseModel):
 
 class FindingDetailOut(FindingOut):
     sources: list[FindingSourceOut]
+    allowed_transitions: list[str] = []

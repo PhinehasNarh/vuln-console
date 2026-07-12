@@ -10,7 +10,7 @@ Companion to [design-language.md](design-language.md). Defines who the product s
 
 ## Core journeys
 
-1. **Morning triage (Sana)**: open console -> findings workspace already filtered to her saved view (new + critical/high) -> j/k through rows, inspector updates live -> disposition each via keyboard -> zero-mouse session. (Dispositions land in M4; navigation and inspection ship now.)
+1. **Morning triage (Sana)**: open console -> findings workspace already filtered to her saved view (new + critical/high) -> j/k through rows, inspector updates live -> assign an owner and disposition each finding (mark false positive, accept risk with an expiry, mark fixed) from the inspector, each with a justification. Saved views and keyboard-driven disposition are the remaining polish; assignment and transitions ship now.
 2. **Ingest and verify (Sana)**: Ctrl+K -> "upload report" -> drop SARIF -> toast-free quiet confirmation -> new rows appear in place with "new" status; re-upload changes nothing (dedup is visible proof of trust).
 3. **Fix my finding (Marco)**: deep link from Slack/ticket (M5) -> inspector open on his finding -> location, evidence, remediation guidance -> done.
 4. **Posture check (Priya)**: reporting workspace (M4+) -> KPI row + trend + SLA breaches table. Nothing else.

@@ -29,7 +29,7 @@ Everything we could build next, grouped by theme. The committed sequence lives i
 - Owner assignment with audit trail and notification (**shipped**); CODEOWNERS-based auto-routing to teams remains (M4)
 - SLA policy per severity with due dates, `sla_status`, overdue filter, and breach events (**shipped**); per business-unit policies and aging dashboards remain (M3/M4)
 - Notifications to Slack, Microsoft Teams, and email on assignment and SLA breach (**shipped**); routing rules and per-user preferences remain (M5)
-- False positive, risk acceptance, and exception workflows with mandatory expiry (M4)
+- Status lifecycle with a legal-transition state machine, mandatory justification per change, and risk acceptance with an auto-reopening expiry (**shipped**). Exceptions as a first-class, listable entity with approval workflow remains (M4)
 - Saved views and shareable filter permalinks
 - Bulk operations: triage fifty findings in one keyboard action
 - Suppression-as-code: export accepted suppressions to scanner config files

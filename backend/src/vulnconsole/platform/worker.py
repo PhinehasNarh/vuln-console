@@ -17,17 +17,20 @@ import vulnconsole.contexts.ingestion.connectors  # noqa: F401  (registers built
 from vulnconsole.contexts.ingestion.application import service as ingestion_service
 from vulnconsole.contexts.normalization.application import service as normalization_service
 from vulnconsole.contexts.normalization.domain.models import Finding
+from vulnconsole.contexts.normalization.domain.triage import NOTIFIABLE_STATUSES
 from vulnconsole.contexts.notifications.application import service as notifications_service
 from vulnconsole.contexts.notifications.application.messages import (
     FindingRef,
     Message,
     build_assignment,
     build_sla_breach,
+    build_status_change,
 )
 from vulnconsole.shared.config import get_settings
 from vulnconsole.shared.db import get_session_factory
 from vulnconsole.shared.events import (
     FINDING_ASSIGNED,
+    FINDING_STATUS_CHANGED,
     SCAN_PARSED,
     SCAN_RECEIVED,
     SLA_BREACHED,
@@ -90,7 +93,7 @@ def make_scan_handler(
     return handle
 
 
-MessageBuilder = Callable[[Finding, dict[str, Any]], Message]
+MessageBuilder = Callable[[Finding, dict[str, Any]], Message | None]
 
 
 def _finding_ref(finding: Finding) -> FindingRef:
@@ -101,6 +104,14 @@ def _finding_ref(finding: Finding) -> FindingRef:
         repository=finding.repository,
         owner=finding.owner,
     )
+
+
+def _status_change_message(finding: Finding, payload: dict[str, Any]) -> Message | None:
+    # Only the notable dispositions notify; routine progress (triaged, ...) is silent.
+    status = str(payload.get("status", ""))
+    if status not in NOTIFIABLE_STATUSES:
+        return None
+    return build_status_change(_finding_ref(finding), status, str(payload.get("reason", "")))
 
 
 def make_notification_handler(
@@ -119,21 +130,25 @@ def make_notification_handler(
                 if finding is None:
                     logger.warning("notify.finding_missing", finding_id=str(finding_id))
                     return
-                await notifications_service.dispatch(session, builder(finding, payload))
+                message = builder(finding, payload)
+                if message is not None:
+                    await notifications_service.dispatch(session, message)
 
         await _ack_with_retry(msg, name, work, ref=str(finding_id))
 
     return handle
 
 
-async def sla_scan_loop(bus: EventBus, stop: asyncio.Event) -> None:
+async def periodic_scan_loop(bus: EventBus, stop: asyncio.Event) -> None:
+    """Runs the time-driven checks: SLA breaches and risk-acceptance expiry."""
     interval = get_settings().sla_scan_interval_seconds
     while not stop.is_set():
         try:
             async with get_session_factory()() as session:
+                await normalization_service.reopen_expired_acceptances(session, bus)
                 await normalization_service.scan_sla_breaches(session, bus)
         except Exception as exc:
-            logger.error("sla.scan_failed", error=str(exc))
+            logger.error("periodic.scan_failed", error=str(exc))
         with contextlib.suppress(TimeoutError):
             await asyncio.wait_for(stop.wait(), timeout=interval)
 
@@ -169,6 +184,11 @@ async def main() -> None:
             lambda finding, payload: build_sla_breach(_finding_ref(finding), payload.get("due_at")),
         ),
     )
+    await bus.subscribe(
+        FINDING_STATUS_CHANGED,
+        durable="worker-notify-status",
+        handler=make_notification_handler("notify-status", _status_change_message),
+    )
     logger.info("worker.started")
 
     stop = asyncio.Event()
@@ -178,11 +198,11 @@ async def main() -> None:
         with contextlib.suppress(NotImplementedError):
             loop.add_signal_handler(sig, stop.set)
 
-    sla_task = asyncio.create_task(sla_scan_loop(bus, stop))
+    scan_task = asyncio.create_task(periodic_scan_loop(bus, stop))
     await stop.wait()
-    sla_task.cancel()
+    scan_task.cancel()
     with contextlib.suppress(asyncio.CancelledError):
-        await sla_task
+        await scan_task
     await bus.close()
     logger.info("worker.stopped")
 

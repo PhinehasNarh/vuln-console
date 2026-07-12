@@ -11,7 +11,8 @@
       "Bash(./.venv/Scripts/python.exe -m pyflakes src/vulnconsole tests alembic)",
       "Bash(./.venv/Scripts/python.exe -m pyflakes src/vulnconsole tests)",
       "Bash(node node_modules/vite/bin/vite.js build)",
-      "Bash(./.venv/Scripts/python.exe -m pytest tests/unit -q)"
+      "Bash(./.venv/Scripts/python.exe -m pytest tests/unit -q)",
+      "Bash(MSYS_NO_PATHCONV=1 docker run --rm -v \"/c/Users/Phinehas_acs/Downloads/L&D/Vuln console/backend:/io\" -w /io python:3.12-slim bash -c \"pip install -e '.[dev]' -q 2>/dev/null && mypy src/vulnconsole\")"
     ]
   }
 }

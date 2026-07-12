@@ -35,6 +35,10 @@ def _finding(
         tool_names=["trivy"],
         owner=owner,
         assigned_at=None,
+        status_reason=None,
+        status_changed_at=None,
+        status_changed_by=None,
+        risk_accepted_until=None,
         sla_due_at=None,
         sla_status=sla,  # type: ignore[arg-type]
         first_seen=NOW,

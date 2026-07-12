@@ -53,7 +53,7 @@ Milestones are vertical slices: each one ships working, tested, documented capab
 
 **Acceptance criteria**: expiry reopens findings without human action; every workflow action requires and records justification; dashboard numbers reconcile with API queries.
 
-**Shipped early**: ownership assignment (`PUT /api/v1/findings/{id}/assignment`) with audit trail and the `triage.finding.assigned` event; overdue filter and owner filter on the findings API. Full lifecycle transitions, exceptions, and dashboards remain.
+**Shipped early**: ownership assignment (`PUT /api/v1/findings/{id}/assignment`) with audit trail and the `triage.finding.assigned` event; overdue and owner filters on the findings API. Full lifecycle transitions now ship too: a state machine (`POST /api/v1/findings/{id}/transition`) enforces legal moves across new / triaged / in_remediation / fixed / false_positive / risk_accepted / suppressed / reopened, every transition requires a justification and is audited and event-published, risk acceptance requires an expiry that a worker loop auto-reopens, and notable dispositions notify. Exceptions-as-first-class-entities, the RBAC matrix expansion, and dashboards remain.
 
 ## M5: Automation and integrations
 

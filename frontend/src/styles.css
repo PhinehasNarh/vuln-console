@@ -435,6 +435,36 @@ table.findings tbody tr.selected {
   flex: 1;
 }
 
+.disposition {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.disposition textarea {
+  font: inherit;
+  font-size: 0.8125rem;
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 6px 10px;
+  resize: vertical;
+}
+
+.disposition textarea:focus {
+  border-color: var(--border-strong);
+  outline: none;
+}
+
+.expiry-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
 /* ---- inspector ---- */
 
 .inspector {
