@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { SearchIcon } from "./Icons";
+
 export interface PaletteAction {
   id: string;
   label: string;
@@ -48,27 +50,30 @@ export function CommandPalette({
         aria-label="Command palette"
         onClick={(event) => event.stopPropagation()}
       >
-        <input
-          ref={inputRef}
-          value={filter}
-          onChange={(event) => setFilter(event.target.value)}
-          placeholder="type a command"
-          aria-label="Search commands"
-          onKeyDown={(event) => {
-            if (event.key === "ArrowDown") {
-              event.preventDefault();
-              setActive((current) => Math.min(visible.length - 1, current + 1));
-            } else if (event.key === "ArrowUp") {
-              event.preventDefault();
-              setActive((current) => Math.max(0, current - 1));
-            } else if (event.key === "Enter") {
-              event.preventDefault();
-              execute(active);
-            } else if (event.key === "Escape") {
-              onClose();
-            }
-          }}
-        />
+        <div className="palette-input-wrap">
+          <SearchIcon className="search-icon" />
+          <input
+            ref={inputRef}
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            placeholder="type a command"
+            aria-label="Search commands"
+            onKeyDown={(event) => {
+              if (event.key === "ArrowDown") {
+                event.preventDefault();
+                setActive((current) => Math.min(visible.length - 1, current + 1));
+              } else if (event.key === "ArrowUp") {
+                event.preventDefault();
+                setActive((current) => Math.max(0, current - 1));
+              } else if (event.key === "Enter") {
+                event.preventDefault();
+                execute(active);
+              } else if (event.key === "Escape") {
+                onClose();
+              }
+            }}
+          />
+        </div>
         <ul role="listbox" aria-label="Commands">
           {visible.length === 0 && <li className="palette-empty">no matching commands</li>}
           {visible.map((action, index) => (

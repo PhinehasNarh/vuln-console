@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 
 import { login } from "./api";
+import { ShieldIcon } from "./Icons";
 
 export function Login({ onLogin }: { onLogin: () => void }) {
   const [username, setUsername] = useState("");
@@ -25,7 +26,16 @@ export function Login({ onLogin }: { onLogin: () => void }) {
   return (
     <div className="login-wrap">
       <form className="login-card" onSubmit={submit}>
-        <h1>Vulnerability Console</h1>
+        <div className="login-brand">
+          <span className="brand-mark" aria-hidden="true">
+            <ShieldIcon />
+          </span>
+          <span className="brand-sub">vulnerability console</span>
+        </div>
+        <div>
+          <h1>Sign in</h1>
+          <p className="login-lede">Triage, prioritize, and remediate findings across your estate.</p>
+        </div>
         <label>
           Username
           <input
@@ -45,10 +55,11 @@ export function Login({ onLogin }: { onLogin: () => void }) {
             required
           />
         </label>
-        {error && <p className="error">{error}</p>}
-        <button type="submit" disabled={busy}>
+        {error && <p className="error small-text">{error}</p>}
+        <button className="primary" type="submit" disabled={busy}>
           {busy ? "Signing in..." : "Sign in"}
         </button>
+        <p className="login-foot">Access is logged to the audit trail.</p>
       </form>
     </div>
   );

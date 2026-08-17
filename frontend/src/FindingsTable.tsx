@@ -1,4 +1,5 @@
 import type { Finding } from "./api";
+import { AlertIcon, InboxIcon } from "./Icons";
 
 interface FindingsTableProps {
   rows: Finding[];
@@ -9,7 +10,37 @@ interface FindingsTableProps {
 }
 
 export function SeverityChip({ severity }: { severity: string }) {
-  return <span className={`chip sev-${severity}`}>{severity}</span>;
+  return (
+    <span className={`chip sev-${severity}`}>
+      <span className="dot" aria-hidden="true" />
+      {severity}
+    </span>
+  );
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  new: "new",
+  triaged: "triaged",
+  in_remediation: "in remediation",
+  fixed: "fixed",
+  risk_accepted: "risk accepted",
+  false_positive: "false positive",
+  suppressed: "suppressed",
+  reopened: "reopened",
+};
+
+export function StatusChip({ status }: { status: string }) {
+  return <span className={`chip status-${status}`}>{STATUS_LABEL[status] ?? status}</span>;
+}
+
+// Up to two initials from an owner handle, for the avatar beside an assignment.
+export function initials(owner: string): string {
+  const parts = owner
+    .split(/[\s._@-]+/)
+    .filter(Boolean)
+    .slice(0, 2);
+  if (parts.length === 0) return "?";
+  return parts.map((part) => part[0]).join("");
 }
 
 const timeFormat = new Intl.DateTimeFormat(undefined, {
@@ -23,7 +54,11 @@ export function FindingsTable({ rows, loading, error, selectedId, onSelect }: Fi
   if (error) {
     return (
       <div className="state-block">
-        <p className="error">{error}</p>
+        <span className="state-icon is-error" aria-hidden="true">
+          <AlertIcon />
+        </span>
+        <p className="empty-title">Could not load findings.</p>
+        <p className="empty-hint error">{error}</p>
       </div>
     );
   }
@@ -50,6 +85,9 @@ export function FindingsTable({ rows, loading, error, selectedId, onSelect }: Fi
   if (rows.length === 0) {
     return (
       <div className="state-block">
+        <span className="state-icon" aria-hidden="true">
+          <InboxIcon />
+        </span>
         <p className="empty-title">No findings match this view.</p>
         <p className="empty-hint">Clear a filter, or upload a scan report to get started.</p>
       </div>
@@ -74,7 +112,9 @@ export function FindingsTable({ rows, loading, error, selectedId, onSelect }: Fi
                 <span className="finding-title">{finding.title}</span>
                 <span className="finding-rule mono">{finding.rule_key}</span>
               </td>
-              <td>{finding.repository}</td>
+              <td className="repo-cell" title={finding.repository}>
+                {finding.repository}
+              </td>
               <td className="mono location-cell">
                 {finding.package ??
                   `${finding.file_path ?? "-"}${finding.line !== null ? `:${finding.line}` : ""}`}
@@ -82,7 +122,12 @@ export function FindingsTable({ rows, loading, error, selectedId, onSelect }: Fi
               <td className="muted">{finding.tool_names.join(", ")}</td>
               <td>
                 {finding.owner ? (
-                  <span className="owner-tag">{finding.owner}</span>
+                  <span className="owner-tag">
+                    <span className="avatar" aria-hidden="true">
+                      {initials(finding.owner)}
+                    </span>
+                    {finding.owner}
+                  </span>
                 ) : (
                   <span className="muted">unassigned</span>
                 )}

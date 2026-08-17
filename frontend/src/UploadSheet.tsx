@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 
 import { uploadScan } from "./api";
+import { UploadIcon } from "./Icons";
 
 export function UploadSheet({
   onClose,
@@ -37,7 +38,10 @@ export function UploadSheet({
   return (
     <div className="upload-sheet">
       <form onSubmit={submit}>
-        <span className="sheet-label">upload scan report</span>
+        <span className="sheet-label">
+          <UploadIcon />
+          upload scan report
+        </span>
         <input
           placeholder="repository, e.g. org/service"
           value={repository}
@@ -52,8 +56,8 @@ export function UploadSheet({
         <button className="ghost small" type="button" onClick={onClose}>
           close
         </button>
-        {message && <span className="ok">{message}</span>}
-        {error && <span className="error">{error}</span>}
+        {message && <span className="ok small-text">{message}</span>}
+        {error && <span className="error small-text">{error}</span>}
       </form>
     </div>
   );

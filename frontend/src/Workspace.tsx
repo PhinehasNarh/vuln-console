@@ -15,6 +15,15 @@ interface WorkspaceProps {
   onSignOut: () => void;
 }
 
+// Severity presets, shown as a segmented control instead of a bare <select>.
+const SEVERITY_FILTERS: { value: string; label: string }[] = [
+  { value: "", label: "all" },
+  { value: "critical", label: "critical" },
+  { value: "critical,high", label: "critical + high" },
+  { value: "medium", label: "medium" },
+  { value: "low,info", label: "low + info" },
+];
+
 export function Workspace({ theme, onToggleTheme, onSignOut }: WorkspaceProps) {
   const [repository, setRepository] = useState("");
   const [severity, setSeverity] = useState("");
@@ -139,6 +148,7 @@ export function Workspace({ theme, onToggleTheme, onSignOut }: WorkspaceProps) {
       <CommandBar
         searchRef={searchRef}
         repository={repository}
+        theme={theme}
         onRepositoryChange={(value) => {
           resetPaging();
           setRepository(value);
@@ -161,24 +171,33 @@ export function Workspace({ theme, onToggleTheme, onSignOut }: WorkspaceProps) {
         <section className="table-pane">
           <div className="toolbar">
             <span aria-live="polite" className="result-count">
-              {query.data
-                ? `${rows.length}${query.data.pagination.has_more ? "+" : ""} findings`
-                : "loading"}
+              {query.data ? (
+                <>
+                  {rows.length}
+                  {query.data.pagination.has_more ? "+" : ""}{" "}
+                  <span className="count-unit">
+                    {rows.length === 1 ? "finding" : "findings"}
+                  </span>
+                </>
+              ) : (
+                <span className="count-unit">loading</span>
+              )}
             </span>
-            <select
-              aria-label="Severity filter"
-              value={severity}
-              onChange={(event) => {
-                resetPaging();
-                setSeverity(event.target.value);
-              }}
-            >
-              <option value="">all severities</option>
-              <option value="critical">critical</option>
-              <option value="critical,high">critical + high</option>
-              <option value="medium">medium</option>
-              <option value="low,info">low + info</option>
-            </select>
+            <div className="segmented" role="group" aria-label="Severity filter">
+              {SEVERITY_FILTERS.map((option) => (
+                <button
+                  key={option.value || "all"}
+                  type="button"
+                  aria-pressed={severity === option.value}
+                  onClick={() => {
+                    resetPaging();
+                    setSeverity(option.value);
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
             {(severity || repository || cursor) && (
               <button
                 className="ghost small"

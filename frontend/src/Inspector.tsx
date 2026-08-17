@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import { assignFinding, getFinding, transitionFinding } from "./api";
-import { SeverityChip } from "./FindingsTable";
+import { initials, SeverityChip, StatusChip } from "./FindingsTable";
+import { CloseIcon } from "./Icons";
 
 const STATUS_LABEL: Record<string, string> = {
   new: "new",
@@ -81,8 +82,8 @@ export function Inspector({ findingId, onClose }: { findingId: string; onClose: 
     <aside className="inspector" aria-label="Finding details">
       <div className="inspector-head">
         <span className="inspector-kicker">finding</span>
-        <button className="ghost small" onClick={onClose} aria-label="Close details">
-          esc
+        <button className="icon-button" onClick={onClose} aria-label="Close details" title="Close (Esc)">
+          <CloseIcon />
         </button>
       </div>
       {query.isLoading && (
@@ -101,9 +102,22 @@ export function Inspector({ findingId, onClose }: { findingId: string; onClose: 
           </div>
           <dl className="meta-grid">
             <dt>status</dt>
-            <dd>{finding.status}</dd>
+            <dd>
+              <StatusChip status={finding.status} />
+            </dd>
             <dt>owner</dt>
-            <dd>{finding.owner ?? "unassigned"}</dd>
+            <dd>
+              {finding.owner ? (
+                <span className="owner-tag">
+                  <span className="avatar" aria-hidden="true">
+                    {initials(finding.owner)}
+                  </span>
+                  {finding.owner}
+                </span>
+              ) : (
+                <span className="muted">unassigned</span>
+              )}
+            </dd>
             {finding.sla_status !== "none" && (
               <>
                 <dt>sla</dt>
@@ -190,7 +204,7 @@ export function Inspector({ findingId, onClose }: { findingId: string; onClose: 
                 </button>
               )}
             </div>
-            {assign.isError && <p className="error">{(assign.error as Error).message}</p>}
+            {assign.isError && <p className="error small-text">{(assign.error as Error).message}</p>}
           </section>
 
           <section className="inspector-section">
@@ -247,7 +261,7 @@ export function Inspector({ findingId, onClose }: { findingId: string; onClose: 
                   </>
                 )}
                 {transition.isError && (
-                  <p className="error">{(transition.error as Error).message}</p>
+                  <p className="error small-text">{(transition.error as Error).message}</p>
                 )}
               </div>
             )}
